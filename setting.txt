@@ -7,11 +7,13 @@ cd mungpick/back
 
 ## 2. 필수 패키지 설치 (yarn 기준)
 
-### (1) 주요 라이브러리 한 번에 설치 (아래 명령어 한 줄 복사해서 실행)
+### (1) 소셜 로그인 관련 패키지
+yarn add passport passport-local passport-jwt jsonwebtoken passport-google-oauth20 passport-kakao passport-naver-v2 express-session
+
+### (2) 주요 라이브러리 한 번에 설치
 yarn add express cors mongoose mongodb moment passport passport-local passport-jwt jsonwebtoken dotenv
 
-### (2) 소셜 로그인 관련 패키지
-yarn add passport-google-oauth20 passport-kakao passport-naver-v2 express-session
+
 
 ### (3) 개발용 자동 재시작 도구(nodemon) 설치
 yarn add nodemon
