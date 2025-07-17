@@ -25,7 +25,7 @@ MONGO_URI=mongodb+srv://MungPick:mungpick123@app.kjht6xp.mongodb.net/mungpick?re
 
 ---
 
-## 4. 개발 서버 실행:
+## 4. 개발 서버 실행(테스트):
 nodemon app.js
 
 ---
@@ -69,3 +69,13 @@ mungpick/
 - `.env` 파일은 git에 올리지 마세요! (민감 정보)!!!중요!!!!
 
 ---
+
+// 루트 경로에 대한 환영 메시지 라우터 추가
+app.get('/', (req, res) => {
+  res.send('Mungpick 백엔드 서버에 오신 것을 환영합니다! 🎉');
+});
+
+---
+
+궁금한 점 있으면 언제든 질문해 주세요!  
+원하는 메시지로 바꿔도 됩니다.

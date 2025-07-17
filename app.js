@@ -39,3 +39,7 @@ app.listen(PORT, () => {
   console.log(`${PORT}번 포트에서 서버 실행 중`);
   console.log('MONGO_URI:', process.env.MONGO_URI);
 });
+
+app.get('/', (req, res) => {
+  res.send('Mungpick 백엔드 서버에 오신 것을 환영합니다! 🎉');
+});
