@@ -1,0 +1,5 @@
+초기세팅 터미널 명령어 순서 (설치)
+
+1. yarn add passport passport-local passport-jwt jsonwebtoken passport-google-oauth20 passport-kakao passport-naver-v2 express-session
+
+2. 

@@ -1,0 +1,85 @@
+[Mungpick 백엔드 개발환경 세팅 가이드]
+
+1. 프로젝트 클론
+----------------
+$ git clone [레포지토리 주소]
+$ cd mungpick/back
+
+2. Node.js & npm 설치
+---------------------
+- Node.js 공식 사이트(https://nodejs.org/ko/)에서 LTS 버전 설치
+- 설치 확인:
+$ node -v
+$ npm -v
+
+3. 의존성(npm 패키지) 설치
+-------------------------
+$ npm install
+
+4. .env 파일 생성
+-----------------
+- 아래 내용을 복사해서 back/.env 파일로 저장
+MONGODB_URI=mongodb://localhost:27017/mungpick
+JWT_SECRET=your_jwt_secret
+PORT=4000
+
+5. 몽고디비(MongoDB) 설치 및 실행
+-------------------------------
+[MacOS(Homebrew 기준)]
+$ brew tap mongodb/brew
+$ brew install mongodb-community
+$ brew services start mongodb-community
+
+[Windows]
+- https://www.mongodb.com/try/download/community 에서 설치 파일 다운로드 및 설치
+- 설치 후 서비스 실행(보통 자동 실행됨)
+
+6. 몽고디비 설치 확인
+---------------------
+$ mongo --version
+$ mongosh
+(프롬프트가 뜨면 정상)
+
+7. 서버 실행
+-------------
+[개발용(자동 리로드)]
+$ npx nodemon app.js
+
+[일반 실행]
+$ node app.js
+
+
+※ 참고사항
+- 몽고디비는 한 번만 설치하면 됩니다(이미 설치된 경우 생략)
+- 윈도우/리눅스는 설치법이 다를 수 있으니 공식 문서 참고 
+
+
+[몽고디비 공식 다운로드 및 참고 링크]
+-------------------------------
+- MongoDB 공식 다운로드(윈도우/맥/리눅스):
+  https://www.mongodb.com/try/download/community
+- 공식 설치 가이드(한글):
+  https://www.mongodb.com/docs/manual/administration/install-community/
+- MacOS Homebrew 설치 공식 문서:
+  https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/
+
+[로컬 몽고디비에서 데이터베이스/컬렉션 만드는 방법]
+------------------------------------------
+1. 터미널에서 몽고디비 셸 실행
+$ mongosh
+
+2. 데이터베이스 생성 및 선택
+> use mungpick
+(이 명령어를 입력하면 'mungpick'이라는 이름의 데이터베이스로 이동하며, 실제 데이터가 저장되면 자동으로 생성됩니다)
+
+3. 컬렉션(테이블) 생성 예시
+> db.users.insertOne({ email: 'test@test.com', password: '1234', nickname: '테스트' })
+(이렇게 하면 'users'라는 컬렉션이 자동으로 생성되고, 첫 데이터가 들어갑니다)
+
+4. 데이터 확인
+> db.users.find()
+
+※ 참고사항
+- 몽고디비는 스키마 없이, 데이터를 넣으면 컬렉션과 데이터베이스가 자동으로 생성됩니다.
+- 실제 서비스에서는 서버 코드에서 자동으로 DB/컬렉션이 생성되므로, 직접 만들 필요는 거의 없습니다.
+- 테스트용으로 직접 데이터 넣고 싶을 때 위 방법을 사용하면 됩니다.
