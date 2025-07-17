@@ -21,6 +21,8 @@ Thumbs.db
 dist/
 build/
 
+.history/
+
 # 패키지 매니저 lock 파일 (yarn.lock은 보통 포함, package-lock.json은 yarn 사용시 불필요)
 package-lock.json
 package-lock-copy.json
