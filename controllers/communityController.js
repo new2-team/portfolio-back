@@ -2,5 +2,10 @@
 
 export const getPosts = async (req, res) => {
   // 게시글 목록 조회 로직
-  res.send('게시글 목록');
+  // res.send('게시글 목록');
+  try {
+    // const posts = await 
+  } catch (error) {
+
+  }
 }; 
