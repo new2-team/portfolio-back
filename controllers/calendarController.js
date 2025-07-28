@@ -19,6 +19,13 @@ export const getSchedulesNames = async (req, res) => {
 
 
 // 일정
+export const getFriendsList = async (req, res) => {
+  // 친구 목록 조회
+  console.log("getFriendsList 요청~!")
+
+  res.send('일정 목록');
+}; 
+
 export const postSchedules = async (req, res) => {
   // 일별 캘린더 일정 등록 로직
   console.log("postSchedules 요청~!")
@@ -28,7 +35,8 @@ export const postSchedules = async (req, res) => {
     title: title,
     date: date,
     time: time,
-    place: place
+    place: place,
+    // friend:
   }
 
   try {
@@ -60,6 +68,10 @@ export const deleteSchedules = async (req, res) => {
 
 // 일기
 export const postDiary = async (req, res) => {
+  // 일별 캘린더 일기 등록 로직
+  res.send('일정 목록');
+}; 
+export const postDiaryPictures = async (req, res) => {
   // 일별 캘린더 일기 등록 로직
   res.send('일정 목록');
 }; 
