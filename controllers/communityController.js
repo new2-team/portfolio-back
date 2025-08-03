@@ -17,13 +17,47 @@ export const getPosts = async (req, res) => {
   }
 }; 
 
-export const removePost = async(req,res) => {
-  // 게시글 삭제
-}
 
 export const registerPost = async(req, res) => {
   // 게시글 등록
+  const {post_id, user_id, title, content} = req.body;
+
+  const newPost = {
+    post_id: post_id,
+    user_id: user_id,
+    title: title,
+    content: content,
+    like_count: 0,
+    comment_count: 0,
+  }
+
+  try {
+    await Post.create(newPost);
+
+    res.status(200).json({message: "게시글 등록 완료"})
+  } catch(error) {
+    console.error(`communityController registerPost ${error}`)
+    res.status(500).json({message:"게시글 등록 중 오류 발생"})
+  }
 }
+
+
+export const removePost = async(req,res) => {
+  // 게시글 삭제
+  const {post_id} = req.params;
+
+  try {
+    await Post.deleteOne({post_id})
+    // 댓글도 같이 삭제
+    await Reply.deleteMany({post_id})
+
+    res.status(200).json({message: "게시글 삭제 완료"})
+  } catch (error) {
+    console.error(`communityController removePost ${error}`)
+    res.status(500).json({message:"게시글 삭제 중 오류 발생"})
+  }
+}
+
 
 
 
@@ -74,6 +108,7 @@ export const removeReply = async(req, res) => {
     {$inc: {comment_count: -1}}
   )
 }
+
 
 
 
