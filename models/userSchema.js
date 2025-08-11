@@ -20,18 +20,19 @@ import { getCurrentTime } from "../utils/utils.js";
 // ref: string, 참조할 스키마이름을 작성하면, 해당 스키마의 ObjectId를 담을 수 있다.
 
 const userSchema = new Schema({
-  email : { type: String, unique: true, require: true },
-  password : { type: String, require: false },
-  name : { type: String },
-  age : { type: Number , default: 0},
-  phone : { type: String, default: "010-0000-0000"},
-  picture : { type: String, default: "none_picture.jpg"},
-  picturePath : { type: String, default: "/default/none_picture.jpg"},
-  token : { type: String,},
-  provider : { type: String, default: "local"}, //어디에서 회원가입했냐. 일반이냐 소셜로그인이냐 판별
-  createdAt : { type: String , default: getCurrentTime},
-  updatedAt : { type: String,  default: getCurrentTime},
+  email: { type: String, require: true, unique: true },
+  password: String,
+  name: String,
+  age: { type: Number, default: 0 },
+  phone: { type: String, default: "010-0000-0000"},
+  picture: { type: String, default: "none_picture.jpg" },
+  picturePath: { type: String, default: "/default/" },
+  token: String,
+  provider: { type: String, default: "local" },
+  createdAt: { type: String, default: getCurrentTime },
+  updatedAt: { type: String, default: getCurrentTime },
 });
+
 
 // model("객체명", 스키마, "컬렉션(테이블명)")
 export default model("User", userSchema, "user")

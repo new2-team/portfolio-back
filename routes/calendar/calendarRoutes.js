@@ -1,7 +1,7 @@
 // 캘린더 관련 라우터 (ES6 import/export)
  
 import express from 'express';
-import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postSchedules, putDiary, putSchedules } from '../controllers/calendarController.js';
+import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postSchedules, putDiary, putSchedules } from '../../controllers/calendar/calendarController.js';
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
 
