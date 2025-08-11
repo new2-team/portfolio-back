@@ -1,5 +1,5 @@
 // import { getCurrentTime } from "../../utils/utils.js";
-import Schedule from "../models/scheduleSchema.js";
+import Schedule from "../../models/scheduleSchema.js";
 
 
 // 월별 캘린더

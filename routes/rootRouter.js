@@ -9,7 +9,6 @@ import userRouter from "./user/userRouter.js";
 const rootRouter = express.Router()
 
 rootRouter.get("/", index)
-rootRouter.use("/todos/api", todoRouter)
 rootRouter.use("/users/api", userRouter)
 rootRouter.use("/calender/api", calendarRoutes)
 rootRouter.use("/chatting/api", chatRoutes)
