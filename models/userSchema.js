@@ -19,18 +19,34 @@ import { getCurrentTime } from "../utils/utils.js";
 // timestamps: boolean, 작성 날짜와 수정 날짜가 자동으로 추가된다.
 // ref: string, 참조할 스키마이름을 작성하면, 해당 스키마의 ObjectId를 담을 수 있다.
 
+// 강아지 프로필을 포함한 사용자 스키마
 const userSchema = new Schema({
-  email: { type: String, require: true, unique: true },
-  password: String,
-  name: String,
-  age: { type: Number, default: 0 },
-  phone: { type: String, default: "010-0000-0000"},
-  picture: { type: String, default: "none_picture.jpg" },
-  picturePath: { type: String, default: "/default/" },
-  token: String,
-  provider: { type: String, default: "local" },
-  createdAt: { type: String, default: getCurrentTime },
-  updatedAt: { type: String, default: getCurrentTime },
+  userId: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  birthday: { type: String, required: true },
+  email: { type: String },
+  profileComplete: { type: Boolean, default: false },
+  dogProfile: {
+      name: String,
+      weight: String,
+      birthDate: String,
+      gender: String,
+      address: String,
+      breed: String,
+      custombreed: String,
+      nickname: String,
+      favoriteSnack: String,
+      walkingCourse: String,
+      messageToFriend: String,
+      charactor: Number,
+      favorites: [Number],
+      cautions: [Number],
+      neutralization: String,
+      profileImage: String
+  },
+  createdAt: { type: Date, default: Date.now }
 });
 
 
