@@ -19,24 +19,25 @@ export const getSchedulesNames = async (req, res) => {
 
 
 // 일정
-export const getFriendsList = async (req, res) => {
-  // 친구 목록 조회
-  console.log("getFriendsList 요청~!")
+// export const getFriendsList = async (req, res) => {
+//   // 친구 목록 조회 -> chat에서 진행
+//   console.log("getFriendsList 요청~!")
 
-  res.send('일정 목록');
-}; 
+//   res.send('일정 목록');
+// }; 
 
 export const postSchedules = async (req, res) => {
   // 일별 캘린더 일정 등록 로직
   console.log("postSchedules 요청~!")
-  const { title, date, time, place } = req.body;
+  const { title, date, time, location } = req.body;
 
   const schedule = {
     title: title,
     date: date,
     time: time,
-    place: place,
-    // friend:
+    location: location
+    // user_id: user_id,
+    // chat_id: chat_id,
   }
 
   try {

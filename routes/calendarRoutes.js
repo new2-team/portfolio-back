@@ -1,7 +1,7 @@
 // 캘린더 관련 라우터 (ES6 import/export)
  
 import express from 'express';
-import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getFriendsList, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../controllers/calendarController.js';
+import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../controllers/calendarController.js';
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
 
@@ -25,7 +25,7 @@ calendarRoutes.get('/month-schedules', getSchedulesNames);
 // 일정
 // 친구 목록 조회
 // http://localhost:8000/calendar/api/get-friendsList
-calendarRoutes.get('/get-friendsList', getFriendsList);
+// calendarRoutes.get('/get-friendsList', getFriendsList);
 
 // 일별 캘린더 일정 등록 - 월별 모달 이거 사용, 채팅 일정 모달에도 이거 사용
 // http://localhost:8000/calendar/api/post-schedules

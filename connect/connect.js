@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 
 const connection_url = 'mongodb+srv://MungPick:mungpick123@app.kjht6xp.mongodb.net/mungpick?retryWrites=true&w=majority';
-
 const connect = () => {
   // 배포환경이 아니라면
   if(process.env.NODE_ENV !== "production"){
