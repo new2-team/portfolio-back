@@ -1,8 +1,11 @@
 import express from "express";
 import passport from "passport";
-import { localStrategy, jwtStrategy } from "../../controller/auth/authController.js";
+import { localStrategy, jwtStrategy, signup } from "../../controllers/auth/authController.js";
 
 const authRouter = express.Router();
+
+// 회원가입 라우트
+authRouter.post("/signup", signup);
 
 // 이메일, 비밀번호 로그인 전략
 authRouter.post("/local", passport.authenticate('local', { session : false }), localStrategy)
