@@ -105,15 +105,12 @@ const userSchema = new Schema({
     
     // 건강정보 (새로 추가)
     healthProfile: {
-        vaccine: [String], // 예방접종 이력 (배열)
-        hospital: String, // 병원 이름
-        visitCycle: String, // 방문 주기
-        lastVisit: String, // 마지막 방문일 (YYYY-MM-DD 형식)
-        allergyCause: String, // 알러지 원인
-        allergySymptom: {
-            type: Number,
-            required: false 
-        }
+        vaccine: [String],
+        hospital: String,
+        visitCycle: String,
+        lastVisit: String,
+        allergyCause: String,
+        allergySymptom: [String]  
     }
 }, {
     timestamps: true // 생성일시, 수정일시 자동 추가

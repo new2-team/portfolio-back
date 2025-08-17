@@ -25,4 +25,6 @@ const upload = multer({
   }
 });
 
+// named export 추가
+export { upload };
 export default upload;

@@ -1,10 +1,11 @@
-import express from 'express';
-import { upload } from '../../utils/multerConfig.js';
-import { thumbnail } from '../../controller/images/imagesController.js';
+import express from "express";
+import { upload } from "../../middleware/multer.js";
+import { uploadProfileImage, uploadImage } from "../../controllers/images/imagesController.js";
 
-const imagesRouter = express.Router()
+const imageRouter = express.Router();
 
-    // formData.append("thumbnail") < key값과 일치
-    imagesRouter.post("/thumbnail", upload.single('thumbnail'), thumbnail)
+// 프로필 이미지 업로드
+imageRouter.post("/profile", upload.single('profileImage'), uploadProfileImage);
 
-export default imagesRouter;
+
+export default imageRouter;
