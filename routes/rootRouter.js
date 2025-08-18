@@ -8,7 +8,7 @@ const rootRouter = express.Router()
 
 rootRouter.get("/", index)
 rootRouter.use("/users", userRouter)  
-rootRouter.use("/calender/api", calendarRoutes)
+rootRouter.use("/calendar/api", calendarRoutes)
 rootRouter.use("/chatting/api", chatRoutes)
 
 export default rootRouter;

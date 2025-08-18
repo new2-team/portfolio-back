@@ -1,5 +1,6 @@
-import User from '../models/user.js';
-import { createChatWithInitialMessage } from '../services/chatting/chatMessageService.js';
+
+import User from '../../models/user.js';
+import { createChatWithInitialMessage } from '../../services/chatting/chatMessageService.js';
 // 채팅 관련 컨트롤러 (채팅방, 메시지 등)
 // 0. matching 스키마 status값이 매칭완료
 // 1. postChattingRoom api호출 -> 프론트에서 해당 matching(matching 이름으로 보내기, 스키마에 있는 값 다 넣어서)객체 전부 백으로 넘겨주기

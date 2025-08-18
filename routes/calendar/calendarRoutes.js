@@ -1,12 +1,12 @@
 // 캘린더 관련 라우터 (ES6 import/export)
  
 import express from 'express';
-import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../controllers/calendarController.js';
+import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../../controllers/calendar/calendarController.js';
 
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
 
-// 등록: post, 조회: get, 수정: put, 삭제: delete
+// 등록: post, 조회: get, 수정: put, 삭제: delete 
 
 // 월별 캘린더
 // 다가오는 일정 조회 -> 일정날 이전일때 일정 찾아서 조회

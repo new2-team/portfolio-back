@@ -1,7 +1,7 @@
 // 채팅 관련 라우터 (ES6 import/export)
 
 import express from 'express';
-import { getChatMessage, getChatPictures, getChattingRoom, getComingSchedules, getFriendsList, postChatMessage, postChatPic, postChattingRoom, putChatMessage, putChattingRoom } from '../controllers/chatController.js';
+import { getChatMessage, getChatPictures, getChattingRoom, getComingSchedules, getFriendsList, postChatMessage, postChatPic, postChattingRoom, putChatMessage, putChattingRoom } from '../../controllers/chatting/chatController.js';
 
 const chatRoutes = express.Router();
 
