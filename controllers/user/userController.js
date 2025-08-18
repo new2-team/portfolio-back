@@ -1,43 +1,72 @@
 import User from "../../models/userSchema.js";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
-// 2단계: 회원정보 입력 (기본 회원가입)
+// 1단계: 기본 회원가입 - DB에 저장하지 않고 임시 데이터만 반환
 export const registerUser = async (req, res) => {
     try {
-        const { userId, password, name, phone, birthday, email } = req.body;
+        console.log('받은 요청 데이터:', req.body);
+        console.log('user_id:', req.body.user_id);
+        console.log('password:', req.body.password);
+        console.log('name:', req.body.name);
+        console.log('tel:', req.body.tel);
+        console.log('birth:', req.body.birth);
+        console.log('email:', req.body.email);
+        const { user_id, password, name, tel, birth, email, ad_yn = false, pri_yn = true, type = 'i' } = req.body;
         
-        // 1. userId 중복 확인
-        const foundUser = await User.findOne({ userId: userId }).lean();
+        // 필수 필드 검증
+        if (!user_id || !password || !name) {
+            return res.status(400).json({
+                registerStatus: false,
+                message: "필수 정보가 누락되었습니다. (user_id, password, name)"
+            });
+        }
+        
+        // 비밀번호 길이 검증 (최소 6자)
+        if (password.length < 6) {
+            return res.status(400).json({
+                registerStatus: false,
+                message: "비밀번호는 최소 6자 이상이어야 합니다."
+            });
+        }
+        
+        // 1. user_id 중복 확인
+        const foundUser = await User.findOne({ user_id: user_id }).lean();
         
         if (foundUser) {
             return res.status(409).json({
                 registerStatus: false,
-                message: "이미 존재하는 아이디입니다."
+                message: "이미 존재하는 사용자 ID입니다."
             });
         }
         
-        // 2. 비밀번호 암호화
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // 2. 이메일이 제공된 경우 중복 확인
+        if (email) {
+            const foundEmail = await User.findOne({ email: email }).lean();
+            
+            if (foundEmail) {
+                return res.status(409).json({
+                    registerStatus: false,
+                    message: "이미 존재하는 이메일입니다."
+                });
+            }
+        }
         
-        // 3. 기본 회원 정보 저장 (프로필은 아직 미완성 상태)
-        const newUser = await User.create({
-            userId: userId,
-            password: hashedPassword,
-            name: name,
-            phone: phone,
-            birthday: birthday,
-            email: email,
-            profileComplete: false, // 프로필 등록 완료 여부
-            createdAt: new Date()
-        });
-        
-        res.status(201).json({
+        // DB에 저장하지 않고 성공 응답만 반환
+        res.status(200).json({
             registerSuccess: true,
-            message: "기본 회원가입이 완료되었습니다. 프로필을 등록해주세요.",
-            user: {
-                userId: newUser.userId,
-                name: newUser.name
+            message: "기본 정보 입력 완료. 다음 단계로 진행해주세요.",
+            tempData: {
+                user_id: user_id,
+                password: password,
+                name: name,
+                tel: tel,
+                birth: birth,
+                email: email,
+                ad_yn: ad_yn,
+                pri_yn: pri_yn,
+                type: type
             }
         });
         
@@ -50,7 +79,7 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// 3단계: 프로필 등록 (강아지 프로필)
+// 2단계: 프로필 등록 - DB에 저장하지 않고 임시 데이터만 반환
 export const profileRegistration = async (req, res) => {
     try {
         const { userId, name, weight, birthDate, gender, address, breed, custombreed, 
@@ -60,57 +89,35 @@ export const profileRegistration = async (req, res) => {
         // 프로필 이미지 처리 (multer 미들웨어 필요)
         const profileImage = req.file;
         
-        // 1. 사용자 존재 확인
-        const foundUser = await User.findOne({ userId: userId });
-        
-        if (!foundUser) {
-            return res.status(404).json({
-                profileStatus: false,
-                message: "존재하지 않는 사용자입니다."
-            });
-        }
-        
-        // 2. 프로필 정보 업데이트
-        const profileData = {
-            profileComplete: true,
-            dogProfile: {
-                name: name,
-                weight: weight,
-                birthDate: birthDate,
-                gender: gender,
-                address: address,
-                breed: breed,
-                custombreed: custombreed,
-                nickname: nickname,
-                favoriteSnack: favoriteSnack,
-                walkingCourse: walkingCourse,
-                messageToFriend: messageToFriend,
-                charactor: charactor,
-                favorites: favorites,
-                cautions: cautions,
-                neutralization: neutralization
-            }
-        };
-        
         // 프로필 이미지가 있으면 경로 저장
+        let profileImagePath = null;
         if (profileImage) {
-            profileData.dogProfile.profileImage = profileImage.path;
+            profileImagePath = `/uploads/profile/${profileImage.filename}`;
         }
         
-        const updatedUser = await User.findOneAndUpdate(
-            { userId: userId },
-            profileData,
-            { new: true }
-        );
-        
+        // DB에 저장하지 않고 성공 응답만 반환
         res.status(200).json({
             profileStatus: true,
-            message: "프로필 등록이 완료되었습니다!",
-            user: {
-                userId: updatedUser.userId,
-                name: updatedUser.name,
-                profileComplete: updatedUser.profileComplete,
-                dogProfile: updatedUser.dogProfile
+            message: "프로필 정보 입력 완료. 다음 단계로 진행해주세요.",
+            tempData: {
+                dogProfile: {
+                    name: name,
+                    weight: weight,
+                    birthDate: birthDate ? new Date(birthDate).toISOString().split('T')[0] : undefined,
+                    gender: gender,
+                    address: address,
+                    breed: breed,
+                    custombreed: custombreed,
+                    nickname: nickname,
+                    favoriteSnack: favoriteSnack,
+                    walkingCourse: walkingCourse,
+                    messageToFriend: messageToFriend,
+                    charactor: charactor,        
+                    favorites: favorites,         
+                    cautions: cautions,  
+                    neutralization: neutralization,
+                    profileImage: profileImagePath
+                }
             }
         });
         
@@ -123,13 +130,110 @@ export const profileRegistration = async (req, res) => {
     }
 };
 
-// 로그인 (userId 기반으로 수정)
+// 최종 단계: 모든 정보를 한번에 DB에 저장
+export const completeRegistration = async (req, res) => {
+    try {
+        const { 
+            // 1단계 데이터
+            user_id, password, name, tel, birth, email, ad_yn, pri_yn, type,
+            // 2단계 데이터  
+            dogProfile,
+            // 3단계 데이터
+            healthProfile
+        } = req.body;
+        
+        // 필수 필드 검증
+        if (!user_id || !password || !name || !dogProfile) {
+            return res.status(400).json({
+                success: false,
+                message: "필수 정보가 누락되었습니다."
+            });
+        }
+        
+        // 1. user_id 중복 확인 (최종 확인)
+        const foundUser = await User.findOne({ user_id: user_id }).lean();
+        
+        if (foundUser) {
+            return res.status(409).json({
+                success: false,
+                message: "이미 존재하는 사용자 ID입니다."
+            });
+        }
+        
+        // 2. 이메일이 제공된 경우 중복 확인
+        if (email) {
+            const foundEmail = await User.findOne({ email: email }).lean();
+            
+            if (foundEmail) {
+                return res.status(409).json({
+                    success: false,
+                    message: "이미 존재하는 이메일입니다."
+                });
+            }
+        }
+        
+        // 트랜잭션 시작
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        
+        try {
+            // 3. 비밀번호 암호화
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(password, saltRounds);
+            
+            // 4. 모든 정보를 한번에 저장
+            const newUser = await User.create([{
+                user_id: user_id,
+                password: hashedPassword,
+                name: name,
+                tel: tel ? parseInt(tel) : undefined,
+                birth: birth ? new Date(birth).toISOString().split('T')[0] : undefined,
+                email: email,
+                ad_yn: ad_yn || false,
+                pri_yn: pri_yn !== undefined ? pri_yn : true,
+                type: type || 'i',
+                profileComplete: true,
+                dogProfile: dogProfile,
+                healthProfile: healthProfile || {}
+            }], { session });
+            
+            // 트랜잭션 커밋
+            await session.commitTransaction();
+            
+            res.status(201).json({
+                success: true,
+                message: "회원가입이 완료되었습니다!",
+                user: {
+                    user_id: newUser[0].user_id,
+                    name: newUser[0].name,
+                    profileComplete: newUser[0].profileComplete
+                }
+            });
+            
+        } catch (error) {
+            // 트랜잭션 롤백
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
+        
+    } catch (error) {
+        console.error("회원가입 완료 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "회원가입 완료 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 로그인 (user_id 기반으로 수정)
 export const loginUser = async (req, res) => {
     try {
-        const { userId, password } = req.body;
+        const { user_id, password } = req.body;
         
-        // 1. userId 존재 확인
-        const foundUser = await User.findOne({ userId: userId }).lean();
+        // 1. user_id 존재 확인
+        const foundUser = await User.findOne({ user_id: user_id }).lean();
         
         if (!foundUser) {
             return res.status(404).json({
@@ -147,6 +251,18 @@ export const loginUser = async (req, res) => {
                 message: "비밀번호가 일치하지 않습니다."
             });
         }
+
+        // jwt 토큰 생성
+        const accessToken = jwt.sign(
+            {
+                user_id: foundUser.user_id,
+                issuer: 'mungpick',
+            },
+            process.env.SECRET_KEY, // .env 파일에서 SECRET_KEY 사용
+            {
+                expiresIn: '24h'
+            }
+        );
         
         // 3. 로그인 성공 - 비밀번호 제외하고 반환
         const { password: _, ...currentUser } = foundUser;
@@ -167,15 +283,269 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// 기존 함수들...
-export const modifyUser = (req, res) => {
-    res.status(200).json({message : "회원정보 수정 완료!"});
+// 특정 회원 정보 업데이트
+export const modifyUser = async (req, res) => {
+    try {
+        const { user_id } = req.params; // URL 파라미터에서 user_id 가져오기
+        const updateData = req.body;
+
+        // 업데이트할 수 있는 필드들만 허용
+        const allowedFields = ['name', 'tel', 'birth', 'email', 'ad_yn', 'pri_yn'];
+        const filteredData = {};
+
+        allowedFields.forEach(field => {
+            if (updateData[field] !== undefined) {
+                filteredData[field] = updateData[field];
+            }
+        });
+
+        // 날짜 형식 처리
+        if (filteredData.birth) {
+            filteredData.birth = new Date(filteredData.birth).toISOString().split('T')[0];
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { user_id: user_id },
+            filteredData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "회원정보 수정이 완료되었습니다!",
+            user: {
+                user_id: updatedUser.user_id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                tel: updatedUser.tel,
+                birth: updatedUser.birth,
+                ad_yn: updatedUser.ad_yn,
+                pri_yn: updatedUser.pri_yn,
+                updatedAt: updatedUser.updatedAt
+            }
+        });
+
+    } catch (error) {
+        console.error("회원정보 수정 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "회원정보 수정 중 오류가 발생했습니다."
+        });
+    }
 };
 
-export const removeUser = (req, res) => {
-    res.status(200).json({message : "회원 탈퇴 완료!"});
+// 특정 회원 삭제
+export const removeUser = async (req, res) => {
+    try {
+        const { user_id } = req.params; // URL 파라미터에서 user_id 가져오기
+
+        const deletedUser = await User.findOneAndDelete({ user_id: user_id });
+
+        if (!deletedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "회원이 성공적으로 삭제되었습니다.",
+            deletedUser: {
+                user_id: deletedUser.user_id,
+                name: deletedUser.name,
+                email: deletedUser.email
+            }
+        });
+
+    } catch (error) {
+        console.error("회원 삭제 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "회원 삭제 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 모든 회원 조회
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}, {
+            password: 0, // 비밀번호는 제외
+            __v: 0
+        }).lean();
+
+        res.status(200).json({
+            success: true,
+            message: "회원 목록을 성공적으로 조회했습니다.",
+            totalCount: users.length,
+            users: users
+        });
+
+    } catch (error) {
+        console.error("회원 목록 조회 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "회원 목록 조회 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 특정 회원 조회
+export const getUserById = async (req, res) => {
+    try {
+        const { user_id } = req.params;
+
+        const user = await User.findOne({ user_id: user_id }, {
+            password: 0, // 비밀번호는 제외
+            __v: 0
+        }).lean();
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "회원 정보를 찾을 수 없습니다."
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "회원 정보를 성공적으로 조회했습니다.",
+            user: user
+        });
+
+    } catch (error) {
+        console.error("회원 조회 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "회원 조회 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 전체 회원 삭제 (관리자용)
+export const deleteAllUsers = async (req, res) => {
+    try {
+        const result = await User.deleteMany({});
+        
+        res.status(200).json({
+            success: true,
+            message: "모든 회원이 성공적으로 삭제되었습니다.",
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error) {
+        console.error("전체 회원 삭제 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "전체 회원 삭제 중 오류가 발생했습니다."
+        });
+    }
 };
 
 export const modifyPicture = (req, res) => {
     res.status(200).json({message : "썸네일 이미지 변경 완료!"});
+};
+
+// 건강정보 등록 - 기존 함수는 유지 (이미 가입된 사용자용)
+export const healthRegistration = async (req, res) => {
+    try {
+        const { userId, vaccine, hospital, visitCycle, lastVisit, allergyCause, allergySymptom } = req.body;
+        
+        // 사용자 존재 확인
+        const foundUser = await User.findOne({ user_id: userId });
+        
+        if (!foundUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+        
+        // 건강정보 업데이트
+        const healthData = {
+            healthProfile: {
+                vaccine: Array.isArray(vaccine) ? vaccine : JSON.parse(vaccine || '[]'),
+                hospital: hospital,
+                visitCycle: visitCycle,
+                lastVisit: lastVisit ? new Date(lastVisit).toISOString().split('T')[0] : undefined,
+                allergyCause: allergyCause,
+                allergySymptom: allergySymptom ? parseInt(allergySymptom) : undefined
+            }
+        };
+        
+        const updatedUser = await User.findOneAndUpdate(
+            { user_id: userId },
+            healthData,
+            { new: true }
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: "건강정보 등록이 완료되었습니다!",
+            user: {
+                user_id: updatedUser.user_id,
+                healthProfile: updatedUser.healthProfile
+            }
+        });
+        
+    } catch (error) {
+        console.error("건강정보 등록 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "건강정보 등록 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 아이디 중복확인
+export const checkUserId = async (req, res) => {
+    try {
+        const { user_id } = req.body;
+        
+        if (!user_id) {
+            return res.status(400).json({
+                success: false,
+                message: "아이디를 입력해주세요."
+            });
+        }
+        
+        // 아이디 형식 검증
+        const userIdRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{6,}$/;
+        if (!userIdRegex.test(user_id)) {
+            return res.status(400).json({
+                success: false,
+                message: "영문과 숫자를 포함한 6자리 이상으로 입력해주세요."
+            });
+        }
+        
+        // 아이디 중복 확인
+        const foundUser = await User.findOne({ user_id: user_id }).lean();
+        
+        if (foundUser) {
+            return res.status(409).json({
+                success: false,
+                message: "이미 사용 중인 아이디입니다."
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: "사용 가능한 아이디입니다."
+        });
+        
+    } catch (error) {
+        console.error("아이디 중복확인 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "중복확인 중 오류가 발생했습니다."
+        });
+    }
 };
