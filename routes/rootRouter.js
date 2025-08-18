@@ -6,14 +6,16 @@ import chatRoutes from "./chatting/chatRoutes.js";
 import userRouter from "./user/userRoutes.js";  
 import communityRoutes from "./community/communityRoutes.js";
 import imagesRouter from "./images/imagesRouter.js";
+import userRouter from "./user/userRoutes.js";
+
 
 const rootRouter = express.Router()
 
 rootRouter.get("/", index)
 rootRouter.use("/auth", authRouter)
 rootRouter.use("/users", userRouter)  
+rootRouter.use("/calendar/api", calendarRoutes)
 rootRouter.use("/images", imagesRouter)
-rootRouter.use("/calender/api", calendarRoutes)
 rootRouter.use("/chatting/api", chatRoutes)
 rootRouter.use("/community", communityRoutes)
 
