@@ -1,5 +1,5 @@
 
-import bodyParser from "body-parser"; // 4.16 내장
+// bodyParser는 Express 4.16+에서 내장되어 있음
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -11,6 +11,7 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from "url";
 import initializePassport from "./auth/auth.js";
 import connect from "./connect/connect.js";
+import authRouter from "./routes/auth/authRouter.js";
 import rootRouter from "./routes/rootRouter.js";
 import socketRouter from "./routes/socket/socketRouter.js";
 
@@ -46,7 +47,7 @@ app.use(cors({
   // credentials : true
 }))
 
-app.use(bodyParser.json())
+app.use(express.json())
 
 // extended true, qs모듈을 사용하여 쿼리스트링 인식
 app.use(express.urlencoded({extended : false}))
@@ -66,7 +67,10 @@ const __dirname = path.dirname(__filename);
 // 폴더를 정적으로 서빙 (URL: "/uploads/...")
 app.use("/uploads", express.static(path.join(__dirname, 'uploads')))
 
-app.use("/", rootRouter)
+app.use("/auth", authRouter);
+
+app.use("/", rootRouter);
+
 
 // app.listen(port, () => {
 //   console.log("Express Server Start!")
