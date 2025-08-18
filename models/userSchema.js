@@ -37,8 +37,11 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
-        description: "회원 비밀번호"
+        required: function() {
+            // OAuth 로그인(구글, 카카오, 네이버)의 경우 password가 없을 수 있음
+            return this.type === 'i'; // 일반 회원만 password 필수
+        },
+        description: "회원 비밀번호 (일반 회원만 필수)"
     },
     name: {
         type: String,
@@ -61,9 +64,9 @@ const userSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['i', 'k', 'n'],
+        enum: ['i', 'g', 'k', 'n'],
         default: 'i',
-        description: "회원타입 (i: 일반회원, k: 카카오회원, n: 네이버회원)"
+        description: "회원타입 (i: 일반회원, g: 구글회원, k: 카카오회원, n: 네이버회원)"
     },
     birth: {
         type: String,

@@ -99,6 +99,7 @@ const googleVerify = async (accessToken, refreshToken, profile, done) => {
                 picture: picture || "none_picture.jpg",
                 picturePath: "default",
                 provider: "google",
+                type: 'g', // 구글 로그인 사용자 타입
                 profileComplete: false
             })
 
@@ -167,6 +168,7 @@ const kakaoVerify = async (accessToken, refreshToken, profile, done) => {
                 picture: "default_kakao.jpg",
                 picturePath: "default",
                 provider: "kakao",
+                type: 'k', // 카카오 로그인 사용자 타입
                 profileComplete: false
             })
 
@@ -234,6 +236,7 @@ const naverVerify = async (accessToken, refreshToken, profile, done) => {
                 picture: "default_naver.jpg",
                 picturePath: "default",
                 provider: "naver",
+                type: 'n', // 네이버 로그인 사용자 타입
                 profileComplete: false
             })
 
