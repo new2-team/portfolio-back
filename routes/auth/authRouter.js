@@ -24,20 +24,20 @@ authRouter.get(
         // 화면을 다시 localhost:3000포트로 리다이렉트 시킨다.
         // 데이터를 보내준다
         // 두 가지를 모두하려면 데이터를 쿼리스트링으로 넘겨줘야한다.
-        return res.redirect(`${clientUrl}/?accessToken=${accessToken}`)
+        return res.redirect(`${clientUrl}/auth/my?accessToken=${accessToken}`)
     }
 )
 
 authRouter.get("/kakao", passport.authenticate('kakao', { session : false }))
 authRouter.get("/kakao/callback", passport.authenticate('kakao', { failureRedirect: clientUrl }), (req, res) => {
     const accessToken = req.user;
-    return res.redirect(`${clientUrl}/?accessToken=${accessToken}`)
+    return res.redirect(`${clientUrl}/auth/my?accessToken=${accessToken}`)
 })
 
 authRouter.get("/naver", passport.authenticate('naver', { session : false, authType : 'reprompt' }))
 authRouter.get("/naver/callback", passport.authenticate('naver', { failureRedirect: clientUrl }), (req, res) => {
     const accessToken = req.user;
-    return res.redirect(`${clientUrl}/?accessToken=${accessToken}`)
+    return res.redirect(`${clientUrl}/auth/my?accessToken=${accessToken}`)
 })
 
 
