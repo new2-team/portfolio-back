@@ -152,18 +152,32 @@ export const completeRegistration = async (req, res) => {
         
         // type 필드를 스키마에 맞게 정규화
         let normalizedType = type;
-        if (type === 'i' || type === 'regular' || type === 'google') {
+        
+        // 소셜 로그인 감지 (더 적극적으로)
+        const isSocialUser = 
+            isSocialLogin === true || 
+            isSocialLogin === "true" || 
+            req.body.isSocialLogin === true ||
+            req.body.isSocialLogin === "true" ||
+            req.body.provider ||
+            type === 'k' || 
+            type === 'n' ||
+            type === 'social';
+            
+        if (isSocialUser) {
+            normalizedType = 'social'; // 소셜회원
+        } else if (type === 'i' || type === 'regular' || type === 'google') {
             normalizedType = 'general'; // 일반회원
-        } else if (type === 'k' || type === 'kakao') {
-            normalizedType = 'social'; // 소셜회원 (카카오)
-        } else if (type === 'n' || type === 'naver') {
-            normalizedType = 'social'; // 소셜회원 (네이버)
         } else if (!['general', 'social'].includes(type)) {
             normalizedType = 'general'; // 기본값
         }
         
         console.log('=== type 필드 정규화 결과 ===');
         console.log('원본 type:', type);
+        console.log('isSocialLogin:', isSocialLogin);
+        console.log('req.body.isSocialLogin:', req.body.isSocialLogin);
+        console.log('req.body.provider:', req.body.provider);
+        console.log('소셜 로그인 감지 여부:', isSocialUser);
         console.log('정규화된 type:', normalizedType);
         console.log('password 존재 여부:', !!password);
         
@@ -202,6 +216,28 @@ export const completeRegistration = async (req, res) => {
         session.startTransaction();
         
         try {
+            // provider 정보 추론 및 설정
+            let detectedProvider = req.body.provider;
+            
+            // provider가 없으면 이메일 도메인이나 다른 정보로 추론
+            if (!detectedProvider && isSocialUser) {
+                if (email && email.includes('gmail.com')) {
+                    detectedProvider = 'google';
+                } else if (req.body.provider === 'k' || type === 'k') {
+                    detectedProvider = 'kakao';
+                } else if (req.body.provider === 'n' || type === 'n') {
+                    detectedProvider = 'naver';
+                } else if (req.body.isSocialLogin) {
+                    // isSocialLogin이 true인데 provider가 없으면 기본값
+                    detectedProvider = 'google'; // 구글이 가장 일반적
+                }
+            }
+            
+            console.log('=== provider 감지 결과 ===');
+            console.log('req.body.provider:', req.body.provider);
+            console.log('detectedProvider:', detectedProvider);
+            console.log('isSocialUser:', isSocialUser);
+            
             // 4. 모든 정보를 한번에 저장
             const userData = {
                 user_id: user_id,
@@ -212,6 +248,8 @@ export const completeRegistration = async (req, res) => {
                 ad_yn: ad_yn || false,
                 pri_yn: pri_yn !== undefined ? pri_yn : true,
                 type: normalizedType, // 정규화된 type 사용
+                isSocialLogin: isSocialUser, // 소셜 로그인 여부
+                provider: detectedProvider, // 감지된 provider 사용
                 profileComplete: true,
                 dogProfile: dogProfile,
                 healthProfile: healthProfile || {}
