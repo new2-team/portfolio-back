@@ -1,4 +1,5 @@
 // 커뮤니티 관련 컨트롤러 (게시글, 댓글 등)
+import mongoose from "mongoose";
 import Post from "../../models/postSchema.js"
 import Reply from "../../models/replySchema.js"
 
@@ -22,21 +23,29 @@ export const getPosts = async (req, res) => {
 
 export const registerPost = async(req, res) => {
   // 게시글 등록
-  const {post_id, user_id, title, content} = req.body;
+  const {post_id, title, content} = req.body;
+  const user_id = req.user.id;
+
+  if(!title?.trim() || !content?.trim()) {
+    return res.status(400).json({message: "필수값 누락"});
+  }
+
+  const safePostId = post_id || `${Date.now()}_${Math.random().toString(36).slice(2,8)}`
 
   const newPost = {
-    post_id: post_id,
-    user_id: user_id,
-    title: title,
-    content: content,
+    post_id: safePostId,
+    user_id,
+    title,
+    content,
     like_count: 0,
     comment_count: 0,
+    created_at:new Date(),
+
   }
 
   try {
-    await Post.create(newPost);
-
-    res.status(200).json({message: "게시글 등록 완료", data: created,})
+    const created = await Post.create(newPost);
+    res.status(201).json({message: "게시글 등록 완료", data: created,})
   } catch(error) {
     console.error(`communityController registerPost ${error}`)
     res.status(500).json({message:"게시글 등록 중 오류 발생"})
@@ -68,28 +77,44 @@ export const removePost = async(req,res) => {
 
 export const registerReply = async(req, res) => {
   // 댓글 등록
-  const {post_id, user_id, reply_content} = req.body;
+  const {post_id, reply_content} = req.body;
+  const user_id = req.user.id;
 
-  const reply = {
-    post_id: post_id,
-    user_id: user_id,
-    reply_content: reply_content
+  if(!post_id || !reply_content?.trim()){ 
+    return res.status(400).json({message:"필수값 누락"});
   }
 
+  
   try{
-    await Reply.create(reply)
+    const reply_id = new mongoose.Types.ObjectId().toString();
+    
+    const created = await Reply.create( {
+      reply_id,
+      post_id,
+      user_id,
+      reply_content,
+      created_at: new Date(),
+    });
+
 
     // 댓글 수 
-    await Post.updateOne(
+    const updated = await Post.findOneAndUpdate(
       {post_id},
-      {$inc: {comment_count: 1}}
-    )
+      {$inc: {comment_count: 1}},
+      {new: true, projection: {comment_count:1}}
+    );
 
-    res.status(200).json({
+    res.status(201).json({
       message: "댓글 추가 완료",
-      reply: created,
+      reply: {
+        reply_id: created.reply_id,
+        post_id,
+        user_id,
+        reply_content,
+        created_at: created.created_at,
+      },
       post_id,
-      comment_count: updated?.comment_count ?? undefined,
+      comment_count: updated?.comment_count,
     })
   } catch (error) {
     console.error(`communityController registerReply ${error}`)
@@ -146,12 +171,12 @@ export const toggleLike = async(req, res) => {
     const updatedPost = await Post.findOneAndUpdate(
       {post_id},
       {$inc: {like_count: liked? -1 : 1}},
-      {new: true}
+      {new: true, projection: {like_count: 1}}
     );
     res.status(200).json({
       message:"좋아요 성공",
       like_count: updatedPost.like_count,
-    })
+    })   
   } catch (error) {
     console.error(`communityController toggleLike ${error}`);
     res.status(500).json({message: "좋아요 실패"})
