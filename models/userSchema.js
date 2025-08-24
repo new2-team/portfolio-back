@@ -1,22 +1,3 @@
-// 스키마 생성시, 선언 가능 타입
-// String: 문자열로 선언
-// Number: 숫자로 선언
-// Date: 날짜 타입으로 선언
-// Boolean: 불린으로 선언
-// Mixed: 무엇이든 가능한 타입으로 선언
-// ObjectId: 다른 스키마를 참조할 때 선언(속성 중, ref와 같이 사용)
-// Array: [] 기호를 사용해 선언, { names: [String] }
-
-// 스키마 생성시, 추가 속성
-// required: boolean, 해당 속성이 필수인지 여부
-// default: 기본값 설정
-// validate: function, 유효성 검증 함수 추가, 리턴은 boolean타입
-// immutable: boolean, true로 설정 시 값을 변경할 수 없음
-// unique: boolean, 해당 속성에 유니크(중복없음)와 인덱스(조회 성능 향상)를 정의할지 여부
-// timestamps: boolean, 작성 날짜와 수정 날짜가 자동으로 추가된다.
-// ref: string, 참조할 스키마이름을 작성하면, 해당 스키마의 ObjectId를 담을 수 있다.
-
-
 import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
@@ -37,8 +18,36 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
-        description: "회원 비밀번호"
+        required: function() {
+            // 일반회원(type: 'general')인 경우에만 비밀번호 필수
+            return this.type === 'general';
+        },
+        description: "회원 비밀번호 (일반회원만 필수)"
+    },
+    // 소셜 로그인용 필드들
+    googleId: {
+        type: String,
+        description: "구글 로그인 ID"
+    },
+    naverId: {
+        type: String,
+        description: "네이버 로그인 ID"
+    },
+    kakaoId: {
+        type: String,
+        description: "카카오 로그인 ID"
+    },
+    // 소셜 로그인 구분을 위한 필드 추가
+    isSocialLogin: {
+        type: Boolean,
+        default: false,
+        description: "소셜 로그인 여부"
+    },
+    provider: {
+        type: String,
+        enum: ['google', 'kakao', 'naver'],
+        default: null,
+        description: "소셜 로그인 제공자"
     },
     name: {
         type: String,
@@ -61,9 +70,9 @@ const userSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['i', 'k', 'n'],
-        default: 'i',
-        description: "회원타입 (i: 일반회원, k: 카카오회원, n: 네이버회원)"
+        enum: ['general', 'social'],
+        default: 'general',
+        description: "회원타입 (general: 일반회원, social: 소셜회원)"
     },
     birth: {
         type: String,
@@ -124,8 +133,8 @@ const userSchema = new Schema({
     timestamps: true // 생성일시, 수정일시 자동 추가
 });
 
-// User 모델 생성
-const User = model("User", userSchema);
+// User 모델 생성 (컬렉션 이름을 "users"로 통일)
+const User = model("User", userSchema, "users");
 
 // User 모델 export
 export default User;
@@ -202,6 +211,57 @@ export const getDogMbti = async (req, res) => {
     }
 };
 
+// 이메일 중복확인 함수 추가
+export const checkEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "이메일을 입력해주세요." 
+            });
+        }
+        
+        // 이메일 형식 검증
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "올바른 이메일 형식이 아닙니다." 
+            });
+        }
+        
+        // 이메일로 기존 사용자 확인
+        const existingUser = await User.findOne({ email: email });
+        
+        if (existingUser) {
+            // 기존 사용자가 있는 경우
+            return res.status(200).json({ 
+                success: true,
+                exists: true,
+                isSocialLogin: existingUser.isSocialLogin || false,
+                message: existingUser.isSocialLogin ? 
+                    "이미 소셜 로그인으로 가입된 이메일입니다." : 
+                    "이미 가입된 이메일입니다."
+            });
+        } else {
+            // 사용 가능한 이메일
+            return res.status(200).json({ 
+                success: true,
+                exists: false,
+                message: "사용 가능한 이메일입니다."
+            });
+        }
+        
+    } catch (error) {
+        console.error("이메일 중복확인 오류:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "이메일 중복확인 중 오류가 발생했습니다." 
+        });
+    }
+};
 
 // 3단계: 프로필 등록 (강아지 프로필)
 export const profileRegistration = async (req, res) => {
