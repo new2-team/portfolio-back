@@ -70,10 +70,18 @@ const userSchema = new Schema({
         description: "회원 생년월일 (YYYY-MM-DD 형식)"
     },
     
-    // 강아지 관련 정보 (선택사항)
-    mbti: {
-        type: String,
-        description: "강아지 엠비티아이 (선택사항)"
+    // 강아지 디비티아이 검사 결과 (선택사항)
+    dogMbti: {
+        isCompleted: {
+            type: Boolean,
+            default: false,
+            description: "강아지 디비티아이 검사 완료 여부"
+        },
+        result: {
+            type: String,
+            default: null,
+            description: "강아지 디비티아이 검사 결과 (예: ENFP, ISFJ 등)"
+        },
     },
     
     // 프로필 완료 여부
@@ -121,6 +129,78 @@ const User = model("User", userSchema);
 
 // User 모델 export
 export default User;
+
+// 강아지 디비티아이 검사 결과 업데이트 함수
+export const updateDogMbti = async (req, res) => {
+    try {
+        const { userId, mbtiResult } = req.body;
+        
+        // 1. 사용자 존재 확인
+        const foundUser = await User.findOne({ user_id: userId });
+        
+        if (!foundUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+        
+        // 2. 디비티아이 검사 결과 업데이트
+        const updateData = {
+            'dogMbti.isCompleted': true,
+            'dogMbti.result': mbtiResult,
+            'dogMbti.completedAt': new Date()
+        };
+        
+        const updatedUser = await User.findOneAndUpdate(
+            { user_id: userId },
+            updateData,
+            { new: true }
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: "강아지 디비티아이 검사 결과가 저장되었습니다!",
+            dogMbti: updatedUser.dogMbti
+        });
+        
+    } catch (error) {
+        console.error("디비티아이 업데이트 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "디비티아이 검사 결과 저장 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 강아지 디비티아이 검사 결과 조회 함수
+export const getDogMbti = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // 사용자 존재 확인
+        const foundUser = await User.findOne({ user_id: userId });
+        
+        if (!foundUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            dogMbti: foundUser.dogMbti
+        });
+        
+    } catch (error) {
+        console.error("디비티아이 조회 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "디비티아이 검사 결과 조회 중 오류가 발생했습니다."
+        });
+    }
+};
 
 
 // 3단계: 프로필 등록 (강아지 프로필)
