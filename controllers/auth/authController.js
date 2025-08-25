@@ -126,9 +126,12 @@ export const signup = async (req, res) => {
             userData = {
                 ...userData,
                 isSocialLogin: true,
-                provider: provider || 'google',
-                // password 필드는 제외 (소셜 로그인은 별도 처리)
+                provider: provider,  // 기본값 제거하고 전달받은 값 그대로 사용
             };
+            
+            // provider 값 디버깅 로그 추가
+            console.log('소셜 로그인 provider 값:', provider);
+            console.log('최종 userData:', userData);
         } else {
             console.log('일반 회원가입 사용자 데이터 준비 - 비밀번호 해시화');
             // 일반 회원가입 사용자는 비밀번호 해시화
@@ -234,7 +237,6 @@ export const checkExistingUser = async (req, res) => {
         });
     }
 };
-
 
 // 이메일 중복확인 함수
 export const checkEmail = async (req, res) => {

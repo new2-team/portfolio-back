@@ -36,7 +36,7 @@ authRouter.get(
         // 프로필 완료 여부에 따라 다른 페이지로 리다이렉트
         if (isNewUser) {
             // 새 사용자: 약관동의 페이지부터 시작 (일반 회원가입과 동일한 플로우)
-            return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&type=${req.user.type}&isNewUser=true`)
+            return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&provider=${req.user.provider}&isNewUser=true`)
         } else {
             // 기존 사용자: 메인 페이지로
             return res.redirect(`${clientUrl}/main?accessToken=${accessToken}`)
@@ -51,7 +51,7 @@ authRouter.get("/kakao/callback", passport.authenticate('kakao', { failureRedire
     // 프로필 완료 여부에 따라 다른 페이지로 리다이렉트
     if (isNewUser) {
         // 새 사용자: 약관동의 페이지부터 시작 (일반 회원가입과 동일한 플로우)
-        return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&type=${req.user.type}&isNewUser=true`)
+        return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&provider=${req.user.provider}&isNewUser=true`)
     } else {
         // 기존 사용자: 메인 페이지로
         return res.redirect(`${clientUrl}/main?accessToken=${accessToken}`)
@@ -65,7 +65,7 @@ authRouter.get("/naver/callback", passport.authenticate('naver', { failureRedire
     // 프로필 완료 여부에 따라 다른 페이지로 리다이렉트
     if (isNewUser) {
         // 새 사용자: 약관동의 페이지부터 시작 (일반 회원가입과 동일한 플로우)
-        return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&type=${req.user.type}&isNewUser=true`)
+        return res.redirect(`${clientUrl}/sign-up?accessToken=${accessToken}&user_id=${req.user.user_id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&provider=${req.user.provider}&isNewUser=true`)
     } else {
         // 기존 사용자: 메인 페이지로
         return res.redirect(`${clientUrl}/main?accessToken=${accessToken}`)
