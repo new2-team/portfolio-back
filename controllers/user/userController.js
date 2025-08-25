@@ -517,8 +517,66 @@ export const deleteAllUsers = async (req, res) => {
     }
 };
 
-export const modifyPicture = (req, res) => {
-    res.status(200).json({message : "썸네일 이미지 변경 완료!"});
+export const modifyPicture = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const profileImage = req.file;
+        
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "사용자 ID가 필요합니다."
+            });
+        }
+        
+        if (!profileImage) {
+            return res.status(400).json({
+                success: false,
+                message: "프로필 이미지가 없습니다."
+            });
+        }
+        
+        // 사용자 존재 확인
+        const foundUser = await User.findOne({ user_id: userId });
+        
+        if (!foundUser) {
+            return res.status(404).json({
+                success: false,
+                message: "존재하지 않는 사용자입니다."
+            });
+        }
+        
+        // 상대경로로 프로필 이미지 URL 생성
+        const profileImageUrl = `/uploads/profile/${profileImage.filename}`;
+        
+        // 프로필 이미지 업데이트
+        const updatedUser = await User.findOneAndUpdate(
+            { user_id: userId },
+            {
+                profile_img: profileImageUrl,
+                'dogProfile.profileImage': profileImageUrl
+            },
+            { new: true }
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: "썸네일 이미지 변경 완료!",
+            profileImageUrl: profileImageUrl,
+            user: {
+                user_id: updatedUser.user_id,
+                profile_img: updatedUser.profile_img,
+                dogProfile: updatedUser.dogProfile
+            }
+        });
+        
+    } catch (error) {
+        console.error("썸네일 변경 오류:", error);
+        res.status(500).json({
+            success: false,
+            message: "썸네일 변경 중 오류가 발생했습니다."
+        });
+    }
 };
 
 // 건강정보 등록 - 기존 함수는 유지 (이미 가입된 사용자용)
