@@ -70,56 +70,69 @@ const googleConfig = {
     callbackURL : "/auth/google/callback"
 }
 
-// 구글 로그인 검증
-const googleVerify = async (accessToken, refreshToken, profile, done) => {
-    const {id, emails, displayName, picture, provider} = profile;
-    const email = emails[0].value;
+        // 구글 로그인 검증
+        const googleVerify = async (accessToken, refreshToken, profile, done) => {
+            const {id, emails, displayName, picture, provider} = profile;
+            const email = emails[0].value;
 
-    try {
-        let exUser = null
-        exUser = await User.findOne({email: email}).lean()
+            try {
+                let exUser = null
+                exUser = await User.findOne({email: email}).lean()
 
-        // 만약 유저가 없다면 회원가입
-        if(!exUser){
-            // user_id 생성 (email 기반으로 고유한 ID 생성)
-            const baseUserId = email.split('@')[0];
-            let user_id = baseUserId;
-            let counter = 1;
-            
-            // user_id 중복 확인 및 생성
-            while (await User.findOne({user_id: user_id})) {
-                user_id = `${baseUserId}${counter}`;
-                counter++;
-            }
+                // 만약 유저가 없다면 새 사용자로 처리 (DB에는 아직 저장하지 않음)
+                if(!exUser){
+                    // user_id 생성 (email 기반으로 고유한 ID 생성)
+                    const baseUserId = email.split('@')[0];
+                    let user_id = baseUserId;
+                    let counter = 1;
+                    
+                    // user_id 중복 확인 및 생성
+                    while (await User.findOne({user_id: user_id})) {
+                        user_id = `${baseUserId}${counter}`;
+                        counter++;
+                    }
 
-            await User.create({
-                user_id: user_id,
-                email: email,
-                name: displayName,
-                picture: picture || "none_picture.jpg",
-                picturePath: "default",
-                provider: "google",
-                profileComplete: false
-            })
+                    // 새 사용자 정보를 responseData에 포함 (DB에는 아직 저장하지 않음)
+                    exUser = {
+                        user_id: user_id,
+                        email: email,
+                        name: displayName,
+                        type: 'k', // 구글 로그인 타입
+                        googleId: id, // 구글 ID 저장
+                        profileComplete: false,
+                        isNewUser: true
+                    };
+                } else {
+                    // 기존 사용자는 profileComplete 상태 확인
+                    exUser.isNewUser = !exUser.profileComplete;
+                    // 기존 사용자도 name과 email 정보가 있는지 확인
+                    if (!exUser.name) exUser.name = displayName;
+                    if (!exUser.email) exUser.email = email;
+                }
 
-            // 회원가입 후 조회
-            exUser = await User.findOne({ email: email }).lean();
-        }
+                const accessToken = jwt.sign(
+                    {
+                        user_id: exUser.user_id,
+                        issuer: 'mungpick',
+                    },
+                    SECRET_KEY,
+                    {
+                        expiresIn: '24h'
+                    }
+                )
 
-        const accessToken = jwt.sign(
-            {
-                user_id: exUser.user_id,
-                issuer: 'mungpick',
-            },
-            SECRET_KEY,
-            {
-                expiresIn: '24h'
-            }
-        )
+                // 프로필 완료 여부와 함께 응답
+                const responseData = {
+                    accessToken,
+                    user_id: exUser.user_id,
+                    name: exUser.name,
+                    email: exUser.email,
+                    type: exUser.type,
+                    profileComplete: exUser.profileComplete || false,
+                    isNewUser: exUser.isNewUser || !exUser.profileComplete
+                }
 
-        // 이미 가입되었다면 토큰 발급해서 로그인,
-        // 회원가입 후 토큰 발급해서 로그인
-        done(null, accessToken)
+                done(null, responseData)
 
     } catch (error) {
         console.log("googleVerify Error")
@@ -148,7 +161,7 @@ const kakaoVerify = async (accessToken, refreshToken, profile, done) => {
             exUser = await User.findOne({email: email}).lean();
         }
         
-        // 만약 유저가 없다면 회원가입
+        // 만약 유저가 없다면 새 사용자로 처리 (DB에는 아직 저장하지 않음)
         if(!exUser){
             // user_id 생성
             let user_id = `kakao_${id}`;
@@ -160,18 +173,22 @@ const kakaoVerify = async (accessToken, refreshToken, profile, done) => {
                 counter++;
             }
 
-            await User.create({
+            // 새 사용자 정보를 responseData에 포함 (DB에는 아직 저장하지 않음)
+            exUser = {
                 user_id: user_id,
                 email: email,
                 name: displayName,
-                picture: "default_kakao.jpg",
-                picturePath: "default",
-                provider: "kakao",
-                profileComplete: false
-            })
-
-            // 회원가입 후 조회
-            exUser = await User.findOne({ user_id: user_id }).lean();
+                type: 'k', // 카카오 로그인 타입
+                kakaoId: id, // 카카오 ID 저장
+                profileComplete: false,
+                isNewUser: true
+            };
+        } else {
+            // 기존 사용자는 profileComplete 상태 확인
+            exUser.isNewUser = !exUser.profileComplete;
+            // 기존 사용자도 name과 email 정보가 있는지 확인
+            if (!exUser.name) exUser.name = displayName;
+            if (!exUser.email) exUser.email = email;
         }
 
         const accessToken = jwt.sign(
@@ -185,7 +202,18 @@ const kakaoVerify = async (accessToken, refreshToken, profile, done) => {
             }
         )
 
-        done(null, accessToken)
+        // 프로필 완료 여부와 함께 응답
+        const responseData = {
+            accessToken,
+            user_id: exUser.user_id,
+            name: exUser.name,
+            email: exUser.email,
+            type: exUser.type,
+            profileComplete: exUser.profileComplete || false,
+            isNewUser: exUser.isNewUser || !exUser.profileComplete
+        }
+
+        done(null, responseData)
 
     } catch (error) {
         console.log("kakaoVerify Error")
@@ -215,7 +243,7 @@ const naverVerify = async (accessToken, refreshToken, profile, done) => {
             exUser = await User.findOne({email: email}).lean();
         }
         
-        // 만약 유저가 없다면 회원가입
+        // 만약 유저가 없다면 새 사용자로 처리 (DB에는 아직 저장하지 않음)
         if(!exUser){
             // user_id 생성
             let user_id = `naver_${id}`;
@@ -227,18 +255,22 @@ const naverVerify = async (accessToken, refreshToken, profile, done) => {
                 counter++;
             }
 
-            await User.create({
+            // 새 사용자 정보를 responseData에 포함 (DB에는 아직 저장하지 않음)
+            exUser = {
                 user_id: user_id,
                 email: email,
                 name: name,
-                picture: "default_naver.jpg",
-                picturePath: "default",
-                provider: "naver",
-                profileComplete: false
-            })
-
-            // 회원가입 후 조회
-            exUser = await User.findOne({ user_id: user_id }).lean();
+                type: 'n', // 네이버 로그인 타입
+                naverId: id, // 네이버 ID 저장
+                profileComplete: false,
+                isNewUser: true
+            };
+        } else {
+            // 기존 사용자는 profileComplete 상태 확인
+            exUser.isNewUser = !exUser.profileComplete;
+            // 기존 사용자도 name과 email 정보가 있는지 확인
+            if (!exUser.name) exUser.name = name;
+            if (!exUser.email) exUser.email = email;
         }
 
         const accessToken = jwt.sign(
@@ -252,7 +284,18 @@ const naverVerify = async (accessToken, refreshToken, profile, done) => {
             }
         )
 
-        done(null, accessToken)
+        // 프로필 완료 여부와 함께 응답
+        const responseData = {
+            accessToken,
+            user_id: exUser.user_id,
+            name: exUser.name,
+            email: exUser.email,
+            type: exUser.type,
+            profileComplete: exUser.profileComplete || false,
+            isNewUser: exUser.isNewUser || !exUser.profileComplete
+        }
+
+        done(null, responseData)
 
     } catch (error) {
         console.log("naverVerify Error")

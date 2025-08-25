@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, profileRegistration, modifyUser, removeUser, modifyPicture, checkUserId, getAllUsers, getUserById, deleteAllUsers, healthRegistration, completeRegistration } from "../../controllers/user/userController.js";
+import { registerUser, profileRegistration, modifyUser, removeUser, modifyPicture, checkUserId, getAllUsers, getUserById, deleteAllUsers, healthRegistration, completeRegistration, socialUserInfoRegistration } from "../../controllers/user/userController.js";
 import { signup } from "../../controllers/auth/authController.js";
 import upload from "../../middleware/multer.js";
 
@@ -10,6 +10,9 @@ userRouter.post("/check-userid", checkUserId);
 
 // 1단계: 기본 회원가입 (임시 데이터만 반환)
 userRouter.post("/register", registerUser);
+
+// 1단계: 소셜 로그인 사용자용 회원정보 입력 (password 불필요)
+userRouter.post("/social-register", socialUserInfoRegistration);
 
 // 2단계: 프로필 등록 (임시 데이터만 반환)
 userRouter.post("/profile-registration", upload.single('profileImage'), profileRegistration);

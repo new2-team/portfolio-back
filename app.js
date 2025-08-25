@@ -1,7 +1,9 @@
+
 // bodyParser는 Express 4.16+에서 내장되어 있음
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+
 import http from 'http';
 import passport from "passport";
 import path from 'path';
@@ -9,9 +11,9 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from "url";
 import initializePassport from "./auth/auth.js";
 import connect from "./connect/connect.js";
+import authRouter from "./routes/auth/authRouter.js";
 import rootRouter from "./routes/rootRouter.js";
 import socketRouter from "./routes/socket/socketRouter.js";
-import authRouter from "./routes/auth/authRouter.js";
 
 // 1. db : DBMS 연결 설정
 // 2. app.js(server.js): 서버 설정, 미들웨어 설정, 라우터 설정
@@ -34,6 +36,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*", methods: ['GET', 'POST', 'PUT', 'DELETE']}
 })
+
 
 // cors 설정
 // app.use()는 미들웨어로서,

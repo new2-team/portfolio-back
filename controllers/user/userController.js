@@ -135,18 +135,57 @@ export const completeRegistration = async (req, res) => {
     try {
         const { 
             // 1단계 데이터
-            user_id, password, name, tel, birth, email, ad_yn, pri_yn, type,
+            user_id, password, name, tel, birth, email, ad_yn, pri_yn, type, isSocialLogin,
             // 2단계 데이터  
             dogProfile,
             // 3단계 데이터
             healthProfile
         } = req.body;
         
-        // 필수 필드 검증
-        if (!user_id || !password || !name || !dogProfile) {
+        // 필수 필드 검증 (소셜 로그인 사용자는 password가 없을 수 있음)
+        if (!user_id || !name || !dogProfile) {
             return res.status(400).json({
                 success: false,
                 message: "필수 정보가 누락되었습니다."
+            });
+        }
+        
+        // type 필드를 스키마에 맞게 정규화
+        let normalizedType = type;
+        
+        // 소셜 로그인 감지 (더 적극적으로)
+        const isSocialUser = 
+            isSocialLogin === true || 
+            isSocialLogin === "true" || 
+            req.body.isSocialLogin === true ||
+            req.body.isSocialLogin === "true" ||
+            req.body.provider ||
+            type === 'k' || 
+            type === 'n' ||
+            type === 'social';
+            
+        if (isSocialUser) {
+            normalizedType = 'social'; // 소셜회원
+        } else if (type === 'i' || type === 'regular' || type === 'google') {
+            normalizedType = 'general'; // 일반회원
+        } else if (!['general', 'social'].includes(type)) {
+            normalizedType = 'general'; // 기본값
+        }
+        
+        console.log('=== type 필드 정규화 결과 ===');
+        console.log('원본 type:', type);
+        console.log('isSocialLogin:', isSocialLogin);
+        console.log('req.body.isSocialLogin:', req.body.isSocialLogin);
+        console.log('req.body.provider:', req.body.provider);
+        console.log('소셜 로그인 감지 여부:', isSocialUser);
+        console.log('정규화된 type:', normalizedType);
+        console.log('password 존재 여부:', !!password);
+        
+        // 일반 회원가입인 경우에만 password 필수
+        if (normalizedType === 'general' && !password) {
+            return res.status(400).json({
+                success: false,
+                message: "일반 회원가입의 경우 비밀번호가 필요합니다."
             });
         }
         
@@ -177,25 +216,53 @@ export const completeRegistration = async (req, res) => {
         session.startTransaction();
         
         try {
-            // 3. 비밀번호 암호화
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
+            // provider 정보 추론 및 설정
+            let detectedProvider = req.body.provider;
+            
+            // provider가 없으면 이메일 도메인이나 다른 정보로 추론
+            if (!detectedProvider && isSocialUser) {
+                if (email && email.includes('gmail.com')) {
+                    detectedProvider = 'google';
+                } else if (req.body.provider === 'k' || type === 'k') {
+                    detectedProvider = 'kakao';
+                } else if (req.body.provider === 'n' || type === 'n') {
+                    detectedProvider = 'naver';
+                } else if (req.body.isSocialLogin) {
+                    // isSocialLogin이 true인데 provider가 없으면 기본값
+                    detectedProvider = 'google'; // 구글이 가장 일반적
+                }
+            }
+            
+            console.log('=== provider 감지 결과 ===');
+            console.log('req.body.provider:', req.body.provider);
+            console.log('detectedProvider:', detectedProvider);
+            console.log('isSocialUser:', isSocialUser);
             
             // 4. 모든 정보를 한번에 저장
-            const newUser = await User.create([{
+            const userData = {
                 user_id: user_id,
-                password: hashedPassword,
                 name: name,
                 tel: tel ? parseInt(tel) : undefined,
                 birth: birth ? new Date(birth).toISOString().split('T')[0] : undefined,
                 email: email,
                 ad_yn: ad_yn || false,
                 pri_yn: pri_yn !== undefined ? pri_yn : true,
-                type: type || 'i',
+                type: normalizedType, // 정규화된 type 사용
+                isSocialLogin: isSocialUser, // 소셜 로그인 여부
+                provider: detectedProvider, // 감지된 provider 사용
                 profileComplete: true,
                 dogProfile: dogProfile,
                 healthProfile: healthProfile || {}
-            }], { session });
+            };
+            
+            // 일반 회원가입인 경우에만 비밀번호 암호화하여 추가
+            if (normalizedType === 'general' && password) {
+                const saltRounds = 10;
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+                userData.password = hashedPassword;
+            }
+            
+            const newUser = await User.create([userData], { session });
             
             // 트랜잭션 커밋
             await session.commitTransaction();
@@ -546,6 +613,76 @@ export const checkUserId = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "중복확인 중 오류가 발생했습니다."
+        });
+    }
+};
+
+// 소셜 로그인 사용자용 회원정보 입력 (password 불필요)
+export const socialUserInfoRegistration = async (req, res) => {
+    try {
+        console.log('소셜 로그인 사용자 회원정보 입력 - 받은 요청 데이터:', req.body);
+        const { user_id, name, tel, birth, email, ad_yn = false, pri_yn = true, type, isSocialLogin } = req.body;
+        
+        // 소셜 로그인 사용자인지 확인
+        if (!isSocialLogin) {
+            return res.status(400).json({
+                registerStatus: false,
+                message: "소셜 로그인 사용자만 사용할 수 있는 API입니다."
+            });
+        }
+        
+        // 필수 필드 검증 (password 제외)
+        if (!name || !tel || !birth || !email) {
+            return res.status(400).json({
+                registerStatus: false,
+                message: "필수 정보가 누락되었습니다. (이름, 휴대폰 번호, 생년월일, 이메일)"
+            });
+        }
+        
+        // 1. user_id 중복 확인 (소셜 로그인은 스킵 가능)
+        if (user_id) {
+            const foundUser = await User.findOne({ user_id: user_id }).lean();
+            
+            if (foundUser) {
+                return res.status(409).json({
+                    registerStatus: false,
+                    message: "이미 존재하는 사용자 ID입니다."
+                });
+            }
+        }
+        
+        // 2. 이메일 중복 확인
+        const foundEmail = await User.findOne({ email: email }).lean();
+        
+        if (foundEmail) {
+            return res.status(409).json({
+                registerStatus: false,
+                message: "이미 존재하는 이메일입니다."
+            });
+        }
+        
+        // DB에 저장하지 않고 성공 응답만 반환
+        res.status(200).json({
+            registerSuccess: true,
+            message: "소셜 로그인 사용자 정보 입력 완료. 다음 단계로 진행해주세요.",
+            tempData: {
+                user_id: user_id || `social_${Date.now()}`,
+                name: name,
+                tel: tel,
+                birth: birth,
+                email: email,
+                ad_yn: ad_yn,
+                pri_yn: pri_yn,
+                type: type || 'k', // 소셜 로그인 기본값
+                isSocialLogin: true
+            }
+        });
+        
+    } catch (error) {
+        console.error("소셜 로그인 사용자 회원정보 입력 오류:", error);
+        res.status(500).json({
+            registerStatus: false,
+            message: "회원정보 입력 중 오류가 발생했습니다."
         });
     }
 };
