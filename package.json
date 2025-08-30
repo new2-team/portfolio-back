@@ -9,8 +9,14 @@
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
+<<<<<<< HEAD
     "mongodb": "^6.18.0",
     "mongoose": "^8.17.2",
+=======
+
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.4",
+>>>>>>> 676e9f2ef04a09fc7b621b75ccabe439577b86c1
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
@@ -21,6 +27,7 @@
     "passport-local": "^1.0.0",
     "passport-naver-v2": "^2.0.8",
     "socket.io": "^4.8.1",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "type": "module"
   }
 }

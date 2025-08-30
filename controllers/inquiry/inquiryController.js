@@ -3,11 +3,17 @@ import Inquiry from "../../models/inquirySchema.js";
 // 문의글 등록
 export const postInquiry = async (req, res) => {
  console.log("문의글 저장 요청😱");
+<<<<<<< HEAD
  const { inquiry_id, user_id, type, title, content, file } = req.body;
  console.log(type, title)
  const inquiry = {
   inquiry_id : inquiry_id,
   user_id : user_id,
+=======
+ const { type, title, content, file } = req.body;
+
+ const inquiry = {
+>>>>>>> 676e9f2ef04a09fc7b621b75ccabe439577b86c1
   type : type,
   title : title,
   content : content,
