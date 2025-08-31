@@ -2,16 +2,36 @@
 import mongoose from "mongoose";
 import Post from "../../models/postSchema.js"
 import Reply from "../../models/replySchema.js"
+import User from "../../models/userSchema.js";
 
 
 // 게시글
 export const getPosts = async (req, res) => {
   // 게시글 목록 조회 로직
   try {
-    const posts = await Post.find().sort({created_at: -1})
+    const posts = await Post.find().sort({created_at: -1}).lean();
+
+    const userIds = [...new Set(posts.map(p=> p.user_id).filter(Boolean))];
+
+    const users = await User.find(
+      {user_id: {$in: userIds}},
+      {user_id:1, 'dogProfile.name': 1, 'dogProfile.profileImage':1}
+    ).lean();
+
+    const userMap = new Map(users.map(u => [u.user_id, u]));
+
+    const withAuthors = posts.map(p => {
+      const author = userMap.get(p.user_id);
+      return {
+        ...p,
+        authorName: author?.dogProfile?.name,
+        authorProfileImage: author?.dogProfile?.profileImage,
+      };
+    })
+
     res.status(200).json({
       message: '게시글 목록 조회',
-      data: posts,
+      data: withAuthors,
 
     });
   } catch (error) {
@@ -24,28 +44,44 @@ export const getPosts = async (req, res) => {
 export const registerPost = async(req, res) => {
   // 게시글 등록
   const {post_id, title, content} = req.body;
-  const user_id = req.user.id;
+  const user_id = req.user?.id;
+  if (!user_id) return res.status(401).json({message:'인증 필요'});
+  
 
   if(!title?.trim() || !content?.trim()) {
     return res.status(400).json({message: "필수값 누락"});
   }
 
-  const safePostId = post_id || `${Date.now()}_${Math.random().toString(36).slice(2,8)}`
+  const safePostId = post_id || `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
 
-  const newPost = {
-    post_id: safePostId,
-    user_id,
-    title,
-    content,
-    like_count: 0,
-    comment_count: 0,
-    created_at:new Date(),
-
-  }
+  
 
   try {
-    const created = await Post.create(newPost);
-    res.status(201).json({message: "게시글 등록 완료", data: created,})
+    const created = await Post.create({
+      post_id: safePostId,
+      user_id,
+      title,
+      content,
+      like_count: 0,
+      comment_count: 0,
+      created_at:new Date(),
+    })
+
+
+    const author = await User.findOne(
+      {user_id},
+      {'dogProfile.name':1, 'dogProfile.profileImage': 1, _id:0}
+    ).lean();
+
+    res.status(201).json({
+      message: "게시글 등록 완료", 
+      data: {
+        ...created.toObject(),
+        authorName: author?.dogProfile?.name || null,
+        authorProfileImage: author?.dogProfile?.profileImage || null,
+      },
+
+      })
   } catch(error) {
     console.error(`communityController registerPost ${error}`)
     res.status(500).json({message:"게시글 등록 중 오류 발생"})
@@ -96,6 +132,11 @@ export const registerReply = async(req, res) => {
       created_at: new Date(),
     });
 
+    const author = await User.findOne(
+      {user_id},
+      {'dogProfile.name':1, 'dogProfile.profileImage': 1}
+    ).lean();
+
 
     // 댓글 수 
     const updated = await Post.findOneAndUpdate(
@@ -112,6 +153,9 @@ export const registerReply = async(req, res) => {
         user_id,
         reply_content,
         created_at: created.created_at,
+        authorName: author?.dogProfile?.name,
+        authorProfileImage: author?.dogProfile?.profileImage,
+
       },
       post_id,
       comment_count: updated?.comment_count,
@@ -182,3 +226,5 @@ export const toggleLike = async(req, res) => {
     res.status(500).json({message: "좋아요 실패"})
   }
 }
+
+

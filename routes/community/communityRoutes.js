@@ -13,8 +13,8 @@ const requireAuth = (req, res, next) => {
     if(!token) return res.status(401).json({message : '인증 토큰이 필요합니다.'});
     
     const payload = jwt.verify(token, process.env.SECRET_KEY);
-    const userId = payload.sub || payload.userId || payload.id;
-    if(!userId) return res.status(401).json({message : '인증 토큰이 필요합니다.'});
+    const userId = payload.user_id || payload.sub || payload.userId || payload.id;
+    if(!userId) return res.status(401).json({message : '유효한 사용자 정보가 없습니다.'});
 
     req.user = {id: userId};
     next();
