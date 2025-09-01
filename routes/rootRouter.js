@@ -6,7 +6,6 @@ import chatRoutes from "./chatting/chatRoutes.js";
 import userRouter from "./user/userRoutes.js";  
 import communityRoutes from "./community/communityRoutes.js";
 import imagesRouter from "./images/imagesRouter.js";
-import userRouter from "./user/userRoutes.js";
 import inquiryRoutes from "./inquiry/inquiryRoutes.js";
 
 

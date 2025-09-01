@@ -1,8 +1,10 @@
 import Inquiry from "../../models/inquirySchema.js";
+import InquiryReply from "../../models/inquiryReplySchema.js"
 
 // 문의글 등록
 export const postInquiry = async (req, res) => {
- console.log("문의글 저장 요청😱");
+  console.log("문의글 저장 요청😱");
+  // console.log(req.users.user_id)
  const { inquiry_id, user_id, type, title, content, file } = req.body;
  console.log(type, title)
  const inquiry = {
@@ -29,12 +31,12 @@ export const postInquiry = async (req, res) => {
 }
 
 // 문의글 조회
-export const getInquirys = async (req, res) => {
+export const getInquiry = async (req, res) => {
   try {
-    const inquirys = await Inquiry.find().sort({created_at: -1})
+    const inquiry = await Inquiry.find().sort({created_at: -1})
     res.status(200).json({
       message: '문의글 조회',
-      data : inquirys,
+      data : inquiry,
     });
   } catch(error) {
     console.error(`inquiryController getinquirys ${error}`)
@@ -47,7 +49,7 @@ export const postInquiryReply = async (req, res) => {
  console.log("문의글 답글 저장 요청😱");
  const { reply_id, inquiry_id, user_id, reply_content } = req.body;
 
- const inquiry = {
+ const inquiryReply = {
   reply_id : reply_id,
   inquiry_id : inquiry_id,
   user_id : user_id,
@@ -55,7 +57,7 @@ export const postInquiryReply = async (req, res) => {
  }
 
  try {
-    await Inquiry.create(inquiry)
+    await InquiryReply.create(inquiryReply)
   } catch (error) {
     console.error(`inquiryController postInquiry ${error}`)
     res.status(500).json({
@@ -64,17 +66,17 @@ export const postInquiryReply = async (req, res) => {
   }
 
   res.status(200).json({
-    message: "문의글 등록이 완료되었습니다.😊"
+    message: "댓글 등록이 완료되었습니다.😊"
   })
 }
 
 // 문의 답글 조회
-export const getInquiryReplys = async (req, res) => {
+export const getInquiryReply = async (req, res) => {
   try {
-    const inquirys = await Inquiry.find().sort({created_at: 1})
+    const inquiry = await InquiryReply.find().sort({created_at: 1})
     res.status(200).json({
       message: '문의글 답글 조회',
-      data : inquirys,
+      data : inquiry,
     });
   } catch(error) {
     console.error(`inquiryController getinquirys ${error}`)

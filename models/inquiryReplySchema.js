@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { getCurrentTime } from "../../portfolio-back2/utils/utils.js";
+import { getCurrentTime } from "../utils/utils.js";
 
 const inquiryReplySchema = new Schema({
  reply_id : { type: String, required: true, unique: true }, // 답변 id
