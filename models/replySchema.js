@@ -10,4 +10,4 @@ const replySchema = new Schema({
   created_at: { type: Date, default: Date.now }, // 댓글 작성 시간
 });
 
-export default model("Reply", replySchema, "repel"); 
+export default model("Reply", replySchema, "replies"); 
