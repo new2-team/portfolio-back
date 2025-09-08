@@ -29,15 +29,15 @@ export const getSchedulesNames = async (req, res) => {
 export const postSchedules = async (req, res) => {
   // 일별 캘린더 일정 등록 로직
   console.log("postSchedules 요청~!")
-  const { title, date, time, location } = req.body;
+  const { user_id, chat_id, title, date, time, location } = req.body;
 
   const schedule = {
+    user_id: user_id,
+    // chat_id: chat_id,
     title: title,
     date: date,
     time: time,
     location: location
-    // user_id: user_id,
-    // chat_id: chat_id,
   }
 
   try {
@@ -56,6 +56,10 @@ export const postSchedules = async (req, res) => {
 
 export const getSchedules = async (req, res) => {
   // 일별 캘린더 일정 조회 로직
+  const schedule_id = req.params.schedule_id;
+  const schedule = {
+    
+  }
   res.send('일정 목록');
 }; 
 export const putSchedules = async (req, res) => {
