@@ -5,7 +5,7 @@ import Schedule from "../../models/scheduleSchema.js";
 // 월별 캘린더
 export const getComingSchedules = async (req, res) => {
   // 다가오는 일정 조회 로직
-  Schedule
+  
   res.send('일정 목록');
 }; 
 export const getCompletedSchedules = async (req, res) => {
@@ -14,6 +14,22 @@ export const getCompletedSchedules = async (req, res) => {
 }; 
 export const getSchedulesNames = async (req, res) => {
   // 월별 캘린더 조회
+  const user_id = req.params.user_id;
+  try {
+    const schedules = await Schedule.find({ user_id: user_id })
+    res.status(200).json({
+      message: "투두를 정상적으로 불러왔습니다.",
+      schedules,
+    })
+
+  } catch (error) {
+    console.log("todoController foundTodo fetching error")
+    console.error(error)
+    res.status(500).json({
+      message: "투두를 불러오는 동안 오류가 발생했습니다.😅"
+    })
+  }
+
   res.send('일정 목록');
 }; 
 
@@ -62,10 +78,12 @@ export const getSchedules = async (req, res) => {
   }
   res.send('일정 목록');
 }; 
+
 export const putSchedules = async (req, res) => {
   // 일별 캘린더 일정 수정 로직
   res.send('일정 목록');
 }; 
+
 export const deleteSchedules = async (req, res) => {
   // 일별 캘린더 일정 삭제 로직
   res.send('일정 목록');

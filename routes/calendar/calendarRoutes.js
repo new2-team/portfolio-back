@@ -19,7 +19,7 @@ calendarRoutes.get('/completed-schedules', getCompletedSchedules);
 
 // 월별 캘린더 조회 -> 모든 일정의 일정이름만 모아서 조회
 // http://localhost:8000/calendar/api/month-schedules
-calendarRoutes.get('/month-schedules', getSchedulesNames);
+calendarRoutes.get('/month-schedules/:user_id', getSchedulesNames);
 
 
 
