@@ -4,6 +4,7 @@ import { getCurrentTime } from "../utils/utils.js";
 const inquirySchema = new Schema ({
  inquiry_id : { type: String, required: true, unique: true }, // 문의글 id
  user_id : { type: String, required: true }, // 회원 id
+ user_name : { type: String, required: true }, //회원 이름
  type : { type: Number, required: true }, // 문의 유형
  title : { type: String, required: true }, // 문의글 제목
  content : { type: String, required: true }, // 문의글 내용
