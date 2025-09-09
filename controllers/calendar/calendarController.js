@@ -72,11 +72,22 @@ export const postSchedules = async (req, res) => {
 
 export const getSchedules = async (req, res) => {
   // 일별 캘린더 일정 조회 로직
-  const schedule_id = req.params.schedule_id;
-  const schedule = {
-    
+  const { user_id } = req.params;
+  const { date } = req.query;
+  
+  try {
+    const schedules = await Schedule.find({ user_id: user_id, date: date })
+    res.status(200).json({
+      message: "일정을 정상적으로 불러왔습니다.",
+      schedules,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      message: "일정을 불러오는 동안 오류가 발생했습니다."
+    })
   }
-  res.send('일정 목록');
+  res.send("일정");
 }; 
 
 export const putSchedules = async (req, res) => {

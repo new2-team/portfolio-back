@@ -34,7 +34,7 @@ calendarRoutes.post('/post-schedules', postSchedules);
 
 // 일별 캘린더 일정 조회
 // http://localhost:8000/calendar/api/get-schedules
-calendarRoutes.get('/get-schedules', getSchedules);
+calendarRoutes.get('/get-schedules/:user_id', getSchedules);
 
 // 일별 캘린더 일정 수정
 // http://localhost:8000/calendar/api/put-schedules
