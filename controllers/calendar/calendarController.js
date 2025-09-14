@@ -5,7 +5,7 @@ import { getCurrentTime } from "../../utils/utils.js";
 
 
 
-// 월별 캘린더
+// 월별 캘린더 - 다가오는 일정날
 export const getComingSchedules = async (req, res) => {
   const user_id = req.params.user_id || req.query.user_id;
   try {
@@ -55,6 +55,7 @@ export const getComingSchedules = async (req, res) => {
   }
 }; 
 
+// 완료된 일정 - 일기쓰면 사라짐
 export const getCompletedSchedules = async (req, res) => {
   const user_id = req.params.user_id || req.query.user_id;
   if (!user_id) {
@@ -84,8 +85,10 @@ export const getCompletedSchedules = async (req, res) => {
           if (s.date < today) return true;   // 오늘 이전 날짜 → 과거
           if (s.date === today) return false; // 오늘 날짜인데 time 없음 → 제외
           return false;
-        }
+        }        
       })
+      // 이미 일기가 작성된 일정 제외
+      .filter((s) => !(s.diary_text || s.diary_photo_url))
       // 4) 최근순 정렬 (내림차순)
       .sort((a, b) => {
         const aTime = a.time
@@ -200,20 +203,69 @@ export const deleteSchedules = async (req, res) => {
 // 일기
 export const postDiary = async (req, res) => {
   // 일별 캘린더 일기 등록 로직
+  const { user_id, _id, diary_text, diary_photo_url } = req.body;
+
+  try {
+    const schedule = await Schedule.findOne({ user_id: user_id, _id: _id })
+    
+    schedule.diary_text = diary_text;
+    schedule.diary_photo_url = diary_photo_url;
+
+    await schedule.save();
+
+    res.status(200).json({
+      message: "일기를 정상적으로 추가했습니다.",
+      diary_text,
+      diary_photo_url
+    })
+  } catch (error) {
+    console.error(`calendarController postDiary ${error}`)
+    res.status(500).json({
+      message: "일기 데이터를 추가하는 중 오류 발생"
+    })
+  }
+  
   res.send('일정 목록');
 }; 
+
 export const postDiaryPictures = async (req, res) => {
-  // 일별 캘린더 일기 등록 로직
-  res.send('일정 목록');
+  // 일별 캘린더 일기 사진 등록 로직
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    const normalizedPath = req.file.path.replace(/\\/g, '/'); // e.g. uploads/diary/2025/09/15/uuid-file.jpg
+    const base = process.env.BACKEND_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const imageUrl = `${base}/${normalizedPath}`;
+
+    return res.status(200).json({
+      message: '일기 이미지가 업로드되었습니다.',
+      imageUrl,
+      file: {
+        filename: req.file.filename,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        destination: req.file.destination,
+        path: req.file.path
+      }
+    });
+  } catch (error) {
+    console.error('[postDiaryPictures] error:', error);
+    return res.status(500).json({ message: '이미지 업로드 중 오류가 발생했습니다.' });
+  }
 }; 
+
 export const getDiary = async (req, res) => {
   // 일별 캘린더 일기 조회 로직
   res.send('일정 목록');
 }; 
+
 export const putDiary = async (req, res) => {
   // 일별 캘린더 일기 수정 로직
   res.send('일정 목록');
 }; 
+
 export const deleteDiary = async (req, res) => {
   // 일별 캘린더 일기 삭제 로직
   res.send('일정 목록');

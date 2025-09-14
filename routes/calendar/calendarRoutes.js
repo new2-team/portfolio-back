@@ -2,6 +2,7 @@
  
 import express from 'express';
 import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../../controllers/calendar/calendarController.js';
+import { upload } from '../../utils/multerConfig.js';
 
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
@@ -53,7 +54,7 @@ calendarRoutes.post('/post-diary', postDiary);
 
 // 일기에 사진 업로드
 // http://localhost:8000/calendar/api/post-diaryPictures
-calendarRoutes.post('/post-diaryPictures', postDiaryPictures);
+calendarRoutes.post('/post-diaryPictures', upload.single('diary'), postDiaryPictures);
 
 // 일별 캘린더 일기 조회
 // http://localhost:8000/calendar/api/get-diary

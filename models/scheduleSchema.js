@@ -12,8 +12,8 @@ const scheduleSchema = new Schema({
   date: { type: String },
   time: { type: String },
   location: { type: String },
-  diary_text: { type: String },
-  diary_photo_url: { type: String },
+  diary_text: { type: String, default: null },
+  diary_photo_url: { type: String, default: null },
   createdAt: { type: String, default: getCurrentTime },
 });
 
