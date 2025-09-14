@@ -1,17 +1,114 @@
 // import { getCurrentTime } from "../../utils/utils.js";
+import moment from "moment";
 import Schedule from "../../models/scheduleSchema.js";
+import { getCurrentTime } from "../../utils/utils.js";
+
 
 
 // 월별 캘린더
 export const getComingSchedules = async (req, res) => {
-  // 다가오는 일정 조회 로직
-  
-  res.send('일정 목록');
+  const user_id = req.params.user_id || req.query.user_id;
+  try {
+    const schedules = await Schedule.find({ user_id }).lean();
+
+    const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
+    const now = moment(nowStr, "YYYY-MM-DD HH:mm:ss");
+    const today = now.format("YYYY-MM-DD");
+
+    const comingSchedules = schedules
+      .filter((s) => {
+        if (!s.date) return false;
+
+        if (s.time) {
+          // date + time 모두 있는 경우
+          const scheduleDateTime = moment(`${s.date} ${s.time}`, "YYYY-MM-DD HH:mm");
+          return scheduleDateTime.isSameOrAfter(now);
+        } else {
+          // time이 없는 경우: date만 비교
+          if (s.date > today) return true;       // 오늘 이후 날짜면 포함
+          if (s.date === today) return true;     // 오늘 날짜면 시간 없어도 포함
+          return false;
+        }
+      })
+      .sort((a, b) => {
+        // 정렬 기준: date 우선, 같으면 time 비교
+        const aDateTime = a.time
+          ? moment(`${a.date} ${a.time}`, "YYYY-MM-DD HH:mm")
+          : moment(`${a.date} 23:59`, "YYYY-MM-DD HH:mm"); // time 없는 건 하루 끝으로 처리
+        const bDateTime = b.time
+          ? moment(`${b.date} ${b.time}`, "YYYY-MM-DD HH:mm")
+          : moment(`${b.date} 23:59`, "YYYY-MM-DD HH:mm");
+
+        return aDateTime - bDateTime;
+      });
+
+    return res.status(200).json({
+      message: "투두를 정상적으로 불러왔습니다.",
+      comingSchedules,
+    });
+  } catch (error) {
+    console.log("calendarController getComingSchedules fetching error");
+    console.error(error);
+    return res.status(500).json({
+      message: "다가오는 일정을 불러오는 동안 오류가 발생하였습니다.",
+    });
+  }
 }; 
+
 export const getCompletedSchedules = async (req, res) => {
-  // 완료된 일정 조회 로직
-  res.send('일정 목록');
-}; 
+  const user_id = req.params.user_id || req.query.user_id;
+  if (!user_id) {
+    return res.status(400).json({ message: 'user_id가 필요합니다.' });
+  }
+
+  try {
+    // 1) 해당 유저 전체 일정
+    const schedules = await Schedule.find({ user_id }).lean();
+
+    // 2) 현재 시각
+    const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
+    const now = moment(nowStr, 'YYYY-MM-DD HH:mm:ss');
+    const today = now.format('YYYY-MM-DD');
+
+    // 3) 과거 일정만 필터링
+    const pastSchedules = schedules
+      .filter((s) => {
+        if (!s.date) return false;
+
+        if (s.time) {
+          // date + time 있는 경우
+          const dt = moment(`${s.date} ${s.time}`, 'YYYY-MM-DD HH:mm');
+          return dt.isBefore(now);
+        } else {
+          // time이 없는 경우 → date로만 비교
+          if (s.date < today) return true;   // 오늘 이전 날짜 → 과거
+          if (s.date === today) return false; // 오늘 날짜인데 time 없음 → 제외
+          return false;
+        }
+      })
+      // 4) 최근순 정렬 (내림차순)
+      .sort((a, b) => {
+        const aTime = a.time
+          ? moment(`${a.date} ${a.time}`, 'YYYY-MM-DD HH:mm')
+          : moment(`${a.date} 23:59`, 'YYYY-MM-DD HH:mm'); // time 없으면 하루 끝으로 취급
+        const bTime = b.time
+          ? moment(`${b.date} ${b.time}`, 'YYYY-MM-DD HH:mm')
+          : moment(`${b.date} 23:59`, 'YYYY-MM-DD HH:mm');
+        return bTime - aTime;
+      });
+
+    return res.status(200).json({
+      message: '지나간 일정 조회 성공',
+      pastSchedules,
+    });
+  } catch (error) {
+    console.error('getCompletedSchedules error', error);
+    return res
+      .status(500)
+      .json({ message: '지나간 일정 조회 중 오류가 발생했습니다.😅' });
+  }
+};
+
 export const getSchedulesNames = async (req, res) => {
   // 월별 캘린더 조회
   const user_id = req.params.user_id;
