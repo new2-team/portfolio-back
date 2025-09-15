@@ -116,6 +116,11 @@ export const postInquiryReply = async (req, res) => {
 
  try {
     await InquiryReply.create(inquiryReply)
+    await Inquiry.findOneAndUpdate(
+      {inquiry_id},
+      {$set : {reply_yn : true}},
+      {new : true}
+    )
   } catch (error) {
     console.error(`inquiryController postInquiry ${error}`)
     res.status(500).json({

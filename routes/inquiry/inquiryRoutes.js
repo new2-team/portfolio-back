@@ -35,7 +35,7 @@ inquiryRoutes.post('/post-inquiry', requireAuth, postInquiry)
 inquiryRoutes.get('/get-inquiry', getInquiry)
 
 // 문의글 하나만 조회
-// http://localhost:8000/inquiry/api/post-inquiry-reply/:id
+// http://localhost:8000/inquiry/api/get-inquiry-detail/:id
 inquiryRoutes.get('/get-inquiry-detail/:id', getInquiryById)
 
 // 문의글 답글 등록
