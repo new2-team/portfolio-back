@@ -66,7 +66,7 @@ calendarRoutes.put('/put-diary', putDiary);
 
 // 일별 캘린더 일기 삭제
 // http://localhost:8000/calendar/api/delete-diary
-calendarRoutes.delete('/delete-diary', deleteDiary);
+calendarRoutes.put('/delete-diary', deleteDiary);
 
 
 export default calendarRoutes; 

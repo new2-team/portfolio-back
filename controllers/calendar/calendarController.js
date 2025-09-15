@@ -192,11 +192,49 @@ export const getSchedules = async (req, res) => {
 
 export const putSchedules = async (req, res) => {
   // 일별 캘린더 일정 수정 로직
+  const { user_id, schedule_id, schedule } = req.body;
+
+  const update = {};
+    if (schedule.title !== undefined) update.title = schedule.title;
+    if (schedule.location !== undefined) update.location = schedule.location;
+    if (schedule.date !== undefined) update.date = schedule.date;   // 필요시 포맷 보정
+    if (schedule.time !== undefined) update.time = schedule.time;   // 필요시 포맷 보정
+    if (Array.isArray(schedule.chat_id)) update.chat_id = schedule.chat_id;
+
+  try {
+    await Schedule.updateOne(
+      {user_id, _id: schedule_id},
+      {$set: update},
+      { runValidators: true },
+    )
+    res.status(200).json({
+      message: "일정을 정상적으로 수정했습니다.",
+    })
+  } catch (error){
+    console.error(`calendarController postDiary ${error}`)
+    res.status(500).json({
+      message: "일정을 수정하는 중 오류 발생"
+    })
+  }
   res.send('일정 목록');
 }; 
 
 export const deleteSchedules = async (req, res) => {
   // 일별 캘린더 일정 삭제 로직
+  const { user_id, schedule_id } = req.body;
+  
+  try {
+    await Schedule.deleteOne({user_id: user_id, _id: schedule_id})
+    res.status(200).json({
+      message: "정상적으로 삭제가 완료되었습니다."
+    })
+  } catch (error) {
+    console.log("calenderController remove error!😥")
+    console.error(err)
+    res.status(500).json({
+      message : "삭제 시 오류가 발생했습니다."
+    })
+  }
   res.send('일정 목록');
 };
 
@@ -263,11 +301,55 @@ export const getDiary = async (req, res) => {
 
 export const putDiary = async (req, res) => {
   // 일별 캘린더 일기 수정 로직
-  res.send('일정 목록');
+  const { user_id, schedule_id, diary_text, diary_photo_url } = req.body;
+
+  const update = {};
+  if(diary_text !== undefined) update.diary_text = diary_text;
+  if(diary_photo_url !== undefined) update.diary_photo_url = diary_photo_url;
+  
+  try {
+    await Schedule.updateOne(
+      {user_id, _id: schedule_id },
+      {$set: update},
+      { runValidators: true },
+    )
+    res.status(200).json({
+        message: "일기를 정상적으로 수정했습니다.",
+        diary_text,
+        diary_photo_url
+      })
+    } catch (error){
+      console.error(`calendarController putDiary ${error}`)
+      res.status(500).json({
+        message: "일기을 수정하는 중 오류 발생"
+      })
+    }
+  res.send('일기 수정 성공');
 }; 
 
 export const deleteDiary = async (req, res) => {
   // 일별 캘린더 일기 삭제 로직
-  res.send('일정 목록');
+  const { user_id, schedule_id } = req.body;
+
+  const update = {};
+  update.diary_text = null;
+  update.diary_photo_url = null;
+
+  try {
+    await Schedule.updateOne(
+      {user_id, _id: schedule_id},
+      {$set: update},
+      { runValidators: true },
+    )
+    res.status(200).json({
+        message: "일기를 정상적으로 삭제했습니다.",
+      })
+    } catch (error){
+      console.error(`calendarController deleteDiary ${error}`)
+      res.status(500).json({
+        message: "일기을 삭제하는 중 오류 발생"
+      })
+    }
+  res.send('일기 삭제 성공');
 }; 
 
