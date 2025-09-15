@@ -3,10 +3,9 @@ import { index } from "../controllers/index.js";
 import authRouter from "./auth/authRouter.js";
 import calendarRoutes from "./calendar/calendarRoutes.js";
 import chatRoutes from "./chatting/chatRoutes.js";
-import userRouter from "./user/userRoutes.js";  
 import communityRoutes from "./community/communityRoutes.js";
 import imagesRouter from "./images/imagesRouter.js";
-
+import userRouter from "./user/userRoutes.js";
 
 const rootRouter = express.Router()
 
