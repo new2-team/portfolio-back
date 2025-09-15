@@ -2,6 +2,7 @@
  
 import express from 'express';
 import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../../controllers/calendar/calendarController.js';
+import { upload } from '../../utils/multerConfig.js';
 
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
@@ -11,15 +12,15 @@ const calendarRoutes = express.Router();
 // 월별 캘린더
 // 다가오는 일정 조회 -> 일정날 이전일때 일정 찾아서 조회
 // http://localhost:8000/calendar/api/coming-schedules
-calendarRoutes.get('/coming-schedules', getComingSchedules);
+calendarRoutes.get('/coming-schedules/:user_id', getComingSchedules);
 
 // 완료된 일정 조회 -> 일정날 이후, 일기 안쓴 일정 찾아서 조회
 // http://localhost:8000/calendar/api/completed-schedules
-calendarRoutes.get('/completed-schedules', getCompletedSchedules);
+calendarRoutes.get('/completed-schedules/:user_id', getCompletedSchedules);
 
 // 월별 캘린더 조회 -> 모든 일정의 일정이름만 모아서 조회
 // http://localhost:8000/calendar/api/month-schedules
-calendarRoutes.get('/month-schedules', getSchedulesNames);
+calendarRoutes.get('/month-schedules/:user_id', getSchedulesNames);
 
 
 
@@ -34,7 +35,7 @@ calendarRoutes.post('/post-schedules', postSchedules);
 
 // 일별 캘린더 일정 조회
 // http://localhost:8000/calendar/api/get-schedules
-calendarRoutes.get('/get-schedules', getSchedules);
+calendarRoutes.get('/get-schedules/:user_id', getSchedules);
 
 // 일별 캘린더 일정 수정
 // http://localhost:8000/calendar/api/put-schedules
@@ -53,7 +54,7 @@ calendarRoutes.post('/post-diary', postDiary);
 
 // 일기에 사진 업로드
 // http://localhost:8000/calendar/api/post-diaryPictures
-calendarRoutes.post('/post-diaryPictures', postDiaryPictures);
+calendarRoutes.post('/post-diaryPictures', upload.single('diary'), postDiaryPictures);
 
 // 일별 캘린더 일기 조회
 // http://localhost:8000/calendar/api/get-diary
