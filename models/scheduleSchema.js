@@ -2,7 +2,6 @@ import { Schema, model } from "mongoose";
 import { getCurrentTime } from "../utils/utils.js";
 
 const scheduleSchema = new Schema({ 
-  // schedule_id: { type: Schema.Types.ObjectId, auto: true },
 
   user_id: { type: String},                 // 나
   chat_id: { type: String },     // 채팅방 ID

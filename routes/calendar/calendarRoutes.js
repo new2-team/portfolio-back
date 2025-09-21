@@ -13,6 +13,8 @@ const calendarRoutes = express.Router();
 // 다가오는 일정 조회 -> 일정날 이전일때 일정 찾아서 조회
 // http://localhost:8000/calendar/api/coming-schedules
 calendarRoutes.get('/coming-schedules/:user_id', getComingSchedules);
+// 쿼리스트링 방식
+calendarRoutes.get('/coming-schedules', getComingSchedules);
 
 // 완료된 일정 조회 -> 일정날 이후, 일기 안쓴 일정 찾아서 조회
 // http://localhost:8000/calendar/api/completed-schedules

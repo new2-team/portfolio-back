@@ -5,11 +5,14 @@ import { getCurrentTime } from "../../utils/utils.js";
 
 
 
-// 월별 캘린더 - 다가오는 일정날
+// 월별 캘린더 - 다가오는 일정날 
 export const getComingSchedules = async (req, res) => {
   const user_id = req.params.user_id || req.query.user_id;
+  const chat_id = req.params.chat_id || req.query.chat_id;
   try {
-    const schedules = await Schedule.find({ user_id }).lean();
+    const filter = { user_id };
+    if(chat_id) filter.chat_id = chat_id;
+    const schedules = await Schedule.find(filter).lean();
 
     const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
     const now = moment(nowStr, "YYYY-MM-DD HH:mm:ss");
@@ -149,7 +152,7 @@ export const postSchedules = async (req, res) => {
 
   const schedule = {
     user_id: user_id,
-    // chat_id: chat_id,
+    chat_id: chat_id,
     title: title,
     date: date,
     time: time,
@@ -199,7 +202,8 @@ export const putSchedules = async (req, res) => {
     if (schedule.location !== undefined) update.location = schedule.location;
     if (schedule.date !== undefined) update.date = schedule.date;   // 필요시 포맷 보정
     if (schedule.time !== undefined) update.time = schedule.time;   // 필요시 포맷 보정
-    if (Array.isArray(schedule.chat_id)) update.chat_id = schedule.chat_id;
+    if (schedule.chat_id !== undefined) update.chat_id = schedule.chat_id;   // 필요시 포맷 보정
+    // if (Array.isArray(schedule.chat_id)) update.chat_id = schedule.chat_id;
 
   try {
     await Schedule.updateOne(

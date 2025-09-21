@@ -1,6 +1,7 @@
 
+import Chat from '../../models/chatSchema.js';
+import Message from '../../models/messageSchema.js';
 import User from '../../models/user.js';
-import { createChatWithInitialMessage } from '../../services/chatting/chatMessageService.js';
 // 채팅 관련 컨트롤러 (채팅방, 메시지 등)
 // 0. matching 스키마 status값이 매칭완료
 // 1. postChattingRoom api호출 -> 프론트에서 해당 matching(matching 이름으로 보내기, 스키마에 있는 값 다 넣어서)객체 전부 백으로 넘겨주기
@@ -23,39 +24,33 @@ export const getFriendsList = async (req, res) => {
 // 1. 채팅방 생성, 초기 메시지 생성
 export const postChattingRoom = async (req, res) => {
   try {
-    // 프론트에서 matching 객체 전체 받기
-    const { matching } = req.body;
-
-    if (!matching) {
-      return res.status(400).json({ error: 'matching 객체가 없습니다.' });
-    }
-
-    const { user_id, target_id, match_id } = matching;
-
-    // 1. target 유저 정보 조회 -> 상대유저 이름, 프로필url 가지고오기
-    const targetUser = await User.findById(target_id);
+    
+    const { user_id, target_id, match_id } = req.body;
+    
+    const targetUser = await User.findOne({ user_id: target_id });
     if (!targetUser) {
       return res.status(404).json({ error: '상대 유저 정보를 찾을 수 없습니다.' });
     }
 
-    const target_name = targetUser.name;
-    const target_profile_img = targetUser.profile_img;
-    const messageContent = "매칭되었습니다! 대화를 나눠보세요";
-    const senderId = 0;
+    const target_name = targetUser.dogProfile.name;
+    const target_profile_img = targetUser.dogProfile.profileImage;
 
-    // 2. 채팅방 + 첫 메시지 생성
-    // chatMessageService에 저값들을 넘긴다
-    const { chat, message } = await createChatWithInitialMessage({
-      user_id,
-      target_id,
-      match_id,
-      target_name,
-      target_profile_img,
-      messageContent, // 채팅방 생성 초기 메시지
-      senderId // 채팅방 생성 관리자 id: 0
+    const chat = await Chat.create({
+      user_id: user_id,
+      match_id: match_id,
+      target_id: target_id,
+      target_name: target_name,
+      target_profile_img: target_profile_img,
     });
 
-    return res.status(201).json({ chat, message });
+    const message = await Message.create({
+      chat_id: chat._id,
+      sender_id: "system",
+      message: "매칭되었습니다! 대화를 나눠보세요"
+    });
+    
+    // await Chat.create(chat)
+    return res.status(201).json({ message: "채팅방이 추가 완료"});
   } catch (error) {
     console.error('postChattingRoom 오류:', error);
     res.status(500).json({ error: '채팅방 생성 실패' });
@@ -69,6 +64,22 @@ export const putChattingRoom = async (req, res) => {
 
 export const getChattingRoom = async (req, res) => {
   // 채팅방 조회 로직 -> 전체 채팅방 리스트 가지고 오기
+  const user_id = req.params.user_id;
+  try {
+    const chats = await Chat.find({ user_id: user_id })
+      .sort({ lastMessageAt: -1 });
+      
+    res.status(200).json({
+      message: "채팅방목록을 정상적으로 불러왔습니다.",
+      chats,
+    })
+  } catch (error){
+    console.log("chatController getChattingRoom fetching error")
+    console.error(error)
+    res.status(500).json({
+      message: "채팅방을 불러오는 동안 오류가 발생했습니다.😅"
+    })
+  }
   res.send('채팅 목록');
 }; 
 

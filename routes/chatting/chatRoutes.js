@@ -14,16 +14,16 @@ chatRoutes.get('/get-friendsList', getFriendsList);
 
 // ------ChatList----------
 // 채팅방 생성 - 필요 잇을까?
-// http://localhost:8000/chatting/api/post-chattingRoom
+// http://localhost:8000/chatting/api/post-chattingRoom 
 chatRoutes.post('/post-chattingRoom', postChattingRoom);
 
 // 채팅방 수정 - lastMessage, lastMessageAt, unreadCounts 업데이트용
 // http://localhost:8000/chatting/api/put-chattingRoom
 chatRoutes.put('/put-chattingRoom', putChattingRoom);
 
-// 채팅방 조회
+// 채팅방 조회 
 // http://localhost:8000/chatting/api/get-chattingRoom
-chatRoutes.get('/get-chattingRoom', getChattingRoom);
+chatRoutes.get('/get-chattingRoom/:user_id', getChattingRoom);
 
 
 // ------ChatApp----------
