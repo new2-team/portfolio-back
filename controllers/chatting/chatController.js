@@ -32,8 +32,16 @@ export const postChattingRoom = async (req, res) => {
       return res.status(404).json({ error: '상대 유저 정보를 찾을 수 없습니다.' });
     }
 
+    const user = await User.findOne({ user_id: user_id });
+    if (!user) {
+      return res.status(404).json({ error: '본인 유저 정보를 찾을 수 없습니다.' });
+    }
+
     const target_name = targetUser.dogProfile.name;
     const target_profile_img = targetUser.dogProfile.profileImage;
+
+    const user_name = user.dogProfile.name;
+    const user_profile_img = user.dogProfile.profileImage;
 
     const chat = await Chat.create({
       user_id: user_id,
@@ -42,6 +50,14 @@ export const postChattingRoom = async (req, res) => {
       target_name: target_name,
       target_profile_img: target_profile_img,
     });
+
+    const targetChat = await Chat.create({
+      user_id: target_id,
+      match_id: match_id,
+      target_id: user_id,
+      target_name: user_name,
+      target_profile_img: user_profile_img,
+    })
 
     const message = await Message.create({
       chat_id: chat._id,
@@ -99,7 +115,20 @@ export const putChatMessage = async (req, res) => {
 
 export const getChatMessage = async (req, res) => {
   // 채팅메시지 내용 리스트 조회 로직
-  res.send('채팅 목록');
+  const chat_id = req.params.chat_id;
+  try {
+    const messages = await Message.find({ chat_id: chat_id })
+    res.status(200).json({
+      message: "메시지를 정상적으로 불러왔습니다.",
+      messages,
+    })
+  } catch (error) {
+    console.log("chatController getChatMessage fetching error")
+    console.error(error)
+    res.status(500).json({
+      message: "메세지를 불러오는 동안 오류가 발생했습니다.😅"
+    })
+  }
 }; 
 
 export const postChatPic = async (req, res) => {
