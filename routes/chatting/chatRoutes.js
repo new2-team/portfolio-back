@@ -2,6 +2,7 @@
 
 import express from 'express';
 import { getChatMessage, getChatPictures, getChattingRoom, getComingSchedules, getFriendsList, postChatMessage, postChatPic, postChattingRoom, putChatMessage, putChattingRoom } from '../../controllers/chatting/chatController.js';
+import { upload } from '../../utils/multerConfig.js';
 
 const chatRoutes = express.Router();
 
@@ -38,14 +39,13 @@ chatRoutes.put('/put-chatMessage/:chat_id', putChatMessage);
 
 // 채팅메시지 내용 조회
 // http://localhost:8000/chatting/api/get-chatMessage
-chatRoutes.get('/get-chatMessage/:chat_id', getChatMessage);
+chatRoutes.get('/get-chatMessage/:chat_id', getChatMessage); 
 
 
 
 // 메시지 사진 업로드
 // http://localhost:8000/chatting/api/post-chatPic
-chatRoutes.post('/post-chatPic/:chat_id', postChatPic);
-
+chatRoutes.post('/post-chatPic', upload.single('messageImage'), postChatPic);
 
 // ------ScheduleAlert--------
 // 메시지 사진 모아보기

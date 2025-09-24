@@ -2,6 +2,7 @@
 import Chat from '../../models/chatSchema.js';
 import Message from '../../models/messageSchema.js';
 import User from '../../models/user.js';
+
 // 채팅 관련 컨트롤러 (채팅방, 메시지 등)
 // 0. matching 스키마 status값이 매칭완료
 // 1. postChattingRoom api호출 -> 프론트에서 해당 matching(matching 이름으로 보내기, 스키마에 있는 값 다 넣어서)객체 전부 백으로 넘겨주기
@@ -43,7 +44,10 @@ export const postChattingRoom = async (req, res) => {
     const user_name = user.dogProfile.name;
     const user_profile_img = user.dogProfile.profileImage;
 
+    // const roomId = new mongoose.Types.ObjectId();
+
     const chat = await Chat.create({
+      // room_id: roomId,
       user_id: user_id,
       match_id: match_id,
       target_id: target_id,
@@ -52,6 +56,7 @@ export const postChattingRoom = async (req, res) => {
     });
 
     const targetChat = await Chat.create({
+      // room_id: roomId,
       user_id: target_id,
       match_id: match_id,
       target_id: user_id,
@@ -60,7 +65,8 @@ export const postChattingRoom = async (req, res) => {
     })
 
     const message = await Message.create({
-      chat_id: chat._id,
+      // room_id: roomId,
+      match_id: match_id,
       sender_id: "system",
       message: "매칭되었습니다! 대화를 나눠보세요"
     });
@@ -115,9 +121,9 @@ export const putChatMessage = async (req, res) => {
 
 export const getChatMessage = async (req, res) => {
   // 채팅메시지 내용 리스트 조회 로직
-  const chat_id = req.params.chat_id;
+  const match_id = req.params.match_id;
   try {
-    const messages = await Message.find({ chat_id: chat_id })
+    const messages = await Message.find({ match_id: match_id })
     res.status(200).json({
       message: "메시지를 정상적으로 불러왔습니다.",
       messages,
@@ -126,14 +132,37 @@ export const getChatMessage = async (req, res) => {
     console.log("chatController getChatMessage fetching error")
     console.error(error)
     res.status(500).json({
-      message: "메세지를 불러오는 동안 오류가 발생했습니다.😅"
+      message: "메세지를 불러오는 동안 오류가 발생했습니다.😅" 
     })
   }
 }; 
 
 export const postChatPic = async (req, res) => {
   // 메시지 사진 업로드 로직
-  res.send('채팅 목록');
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    const normalizedPath = req.file.path.replace(/\\/g, '/'); // e.g. uploads/diary/2025/09/15/uuid-file.jpg
+    const base = process.env.BACKEND_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const imageUrl = `${base}/${normalizedPath}`;
+
+    return res.status(200).json({
+      message: '일기 이미지가 업로드되었습니다.',
+      imageUrl,
+      file: {
+        filename: req.file.filename,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        destination: req.file.destination,
+        path: req.file.path
+      }
+    });
+  } catch (error) {
+    console.error('[postDiaryPictures] error:', error);
+    return res.status(500).json({ message: '이미지 업로드 중 오류가 발생했습니다.' });
+  }
 }; 
 
 // ScheduleAlert

@@ -62,27 +62,25 @@ const socketRouter = (io) => {
         // - Message 스키마에 { chat_id, clientMessageId } 유니크 인덱스 권장
         let saved = null;
         if (clientMessageId) {
-          saved = await Message.findOne({ chat_id: roomId, clientMessageId }).lean();
+          saved = await Message.findOne({ match_id: roomId, clientMessageId }).lean();
         }
 
         // 저장된 게 없다면 새로 생성
         if (!saved) {
           saved = await Message.create({
-            chat_id: roomId,
+            match_id: roomId,
             sender_id,
             message: message ?? '',
             images_url: Array.isArray(images_url) ? images_url : (images_url ? [images_url] : []),
             read: false,                           // 상대가 읽을 때까지 false
             clientMessageId: clientMessageId || undefined,
-            createdAt: new Date().toISOString(),   // 저장 시각
           });
 
           // 인박스/리스트 정렬을 위한 방 메타정보 갱신
           const last = message ?? (images_url?.length ? '[이미지]' : '');
-          await Chat.findByIdAndUpdate(
-            roomId,
-            { lastMessage: last, lastMessageAt: saved.createdAt },
-            { new: false }
+          await Chat.updateMany(
+            { match_id: String(roomId) },
+            { $set: { lastMessage: last, lastMessageAt: saved.createdAt } },
           );
         }
 
@@ -97,22 +95,19 @@ const socketRouter = (io) => {
       }
     });
 
-    // 4) 읽음 처리: 내가 방을 열거나 읽음 상태가 되면 호출
-    // - 내 메시지는 제외하고, 상대가 보낸 "읽지 않은" 메시지를 읽음 처리
-    // 클라 예: socket.emit('chat:read', { roomId, userId })
+    // 4) 읽음 처리: 내가 방을 열면, 상대 msg 읽음 처리, 내 채팅방도 읽음 처리
     socket.on('chat:read', async ({ roomId, userId }) => {
       try {
         if (!roomId || !userId) return;
         await Message.updateMany(
-          { chat_id: roomId, read: false, sender_id: { $ne: userId } }, // 내가 보낸 건 제외
+          { match_id: roomId, read: false, sender_id: { $ne: userId } }, // 내가 보낸 건 제외
           { $set: { read: true } }
         );
-        // 동일 방의 모든 참가자에게 "누가 언제 읽었는지" 전달 → UI에서 '읽음' 표시 갱신 가능
-        io.to(String(roomId)).emit('chat:read:receipt', {
-          roomId,
-          userId,
-          at: new Date().toISOString(),
-        });
+        await Chat.updateOne(
+          { match_id: roomId, user_id: userId },
+          { $set: { unreadCounts: 0 }}
+        )
+       
       } catch (e) {
         console.error('read update failed', e);
       }

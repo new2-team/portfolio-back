@@ -3,6 +3,7 @@ import { getCurrentTime } from "../utils/utils.js";
 
 const chatSchema = new Schema({
   // chat_id: { type: Schema.Types.ObjectId, auto: true },  // PK: 자동 생성
+  // room_id: {type: String, required: true },
   match_id: { type: String, required: true },            // FK: Match 테이블 (임시 수동)
   user_id: { type: String, required: true },             // 내 ID
   target_id: { type: String, required: true },           // 상대 ID
