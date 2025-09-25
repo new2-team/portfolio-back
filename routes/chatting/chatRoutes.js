@@ -39,7 +39,7 @@ chatRoutes.put('/put-chatMessage/:chat_id', putChatMessage);
 
 // 채팅메시지 내용 조회
 // http://localhost:8000/chatting/api/get-chatMessage
-chatRoutes.get('/get-chatMessage/:chat_id', getChatMessage); 
+chatRoutes.get('/get-chatMessage/:match_id', getChatMessage); 
 
 
 

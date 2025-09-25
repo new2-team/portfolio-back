@@ -3,9 +3,9 @@ import { getCurrentTime } from "../utils/utils.js";
 
 const scheduleSchema = new Schema({ 
 
-  user_id: { type: String},                 // 나
-  chat_id: { type: String },     // 채팅방 ID
-  // target_id: { type: String },                               // 상대 회원 ID
+  user_id: { type: String },                 // 나
+  // chat_id: { type: String },     // 채팅방 ID
+  match_id: { type: String },                             // 상대 회원 ID
 
   title: { type: String, required: true },                   // 제목
   date: { type: String },

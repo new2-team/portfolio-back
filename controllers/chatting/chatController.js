@@ -44,10 +44,7 @@ export const postChattingRoom = async (req, res) => {
     const user_name = user.dogProfile.name;
     const user_profile_img = user.dogProfile.profileImage;
 
-    // const roomId = new mongoose.Types.ObjectId();
-
     const chat = await Chat.create({
-      // room_id: roomId,
       user_id: user_id,
       match_id: match_id,
       target_id: target_id,
@@ -56,7 +53,6 @@ export const postChattingRoom = async (req, res) => {
     });
 
     const targetChat = await Chat.create({
-      // room_id: roomId,
       user_id: target_id,
       match_id: match_id,
       target_id: user_id,
@@ -65,7 +61,6 @@ export const postChattingRoom = async (req, res) => {
     })
 
     const message = await Message.create({
-      // room_id: roomId,
       match_id: match_id,
       sender_id: "system",
       message: "매칭되었습니다! 대화를 나눠보세요"
@@ -102,7 +97,7 @@ export const getChattingRoom = async (req, res) => {
       message: "채팅방을 불러오는 동안 오류가 발생했습니다.😅"
     })
   }
-  res.send('채팅 목록');
+  // res.send('채팅 목록');
 }; 
 
 
@@ -124,13 +119,13 @@ export const getChatMessage = async (req, res) => {
   const match_id = req.params.match_id;
   try {
     const messages = await Message.find({ match_id: match_id })
+      .sort({ createdAt: 1 });
     res.status(200).json({
       message: "메시지를 정상적으로 불러왔습니다.",
       messages,
     })
   } catch (error) {
-    console.log("chatController getChatMessage fetching error")
-    console.error(error)
+    console.error("chatController getChatMessage fetching error", error);
     res.status(500).json({
       message: "메세지를 불러오는 동안 오류가 발생했습니다.😅" 
     })
@@ -160,7 +155,7 @@ export const postChatPic = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[postDiaryPictures] error:', error);
+    console.error('[postDiaryPictures] error:', error); 
     return res.status(500).json({ message: '이미지 업로드 중 오류가 발생했습니다.' });
   }
 }; 
@@ -168,9 +163,14 @@ export const postChatPic = async (req, res) => {
 // ScheduleAlert
 export const getChatPictures = async (req, res) => {
   // 메시지 사진 모아보기 로직
-  res.send('채팅 목록');
+  // const user_id = req.params.user_id || req.query.user_id;
+  // const match_id = req.params.match_id || req.query.match_id;
+  // try {
+  //   const messages = awat
+  // }
 }; 
 
+// 캘린더 다가오는 일정으로 대체
 export const getComingSchedules = async (req, res) => {
   // 채팅 상대와의 일정 목록 조회 로직
   res.send('채팅 목록');

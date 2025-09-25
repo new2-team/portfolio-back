@@ -4,14 +4,19 @@ import Schedule from "../../models/scheduleSchema.js";
 import { getCurrentTime } from "../../utils/utils.js";
 
 
-
 // 월별 캘린더 - 다가오는 일정날 
 export const getComingSchedules = async (req, res) => {
-  const user_id = req.params.user_id || req.query.user_id;
-  const chat_id = req.params.chat_id || req.query.chat_id;
   try {
+    const user_id = req.params.user_id || req.query.user_id;
+    const match_id = req.params.match_id || req.query.match_id;
+
     const filter = { user_id };
-    if(chat_id) filter.chat_id = chat_id;
+     if (match_id) {
+      filter.$or = [
+        { match_id: String(match_id) },
+      ];
+    }
+
     const schedules = await Schedule.find(filter).lean();
 
     const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
@@ -148,11 +153,11 @@ export const getSchedulesNames = async (req, res) => {
 export const postSchedules = async (req, res) => {
   // 일별 캘린더 일정 등록 로직
   console.log("postSchedules 요청~!")
-  const { user_id, chat_id, title, date, time, location } = req.body;
+  const { user_id, match_id, title, date, time, location } = req.body;
 
   const schedule = {
     user_id: user_id,
-    chat_id: chat_id,
+    match_id: match_id,
     title: title,
     date: date,
     time: time,
