@@ -82,6 +82,11 @@ const socketRouter = (io) => {
             { match_id: String(roomId) },
             { $set: { lastMessage: last, lastMessageAt: saved.createdAt } },
           );
+          // 상대 unreadCounts +1 하기
+          await Chat.updateMany(
+          { match_id: roomId, user_id: { $ne: sender_id } },
+          { $inc: { unreadCounts: 1 } }
+        );
         }
 
         // 보낸 사람에게 ACK 반환 (낙관적 메시지 → 서버 저장본으로 치환하는데 사용)

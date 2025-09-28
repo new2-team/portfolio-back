@@ -1,6 +1,8 @@
 // import { getCurrentTime } from "../../utils/utils.js";
 import moment from "moment";
+import Chat from "../../models/chatSchema.js";
 import Schedule from "../../models/scheduleSchema.js";
+import User from "../../models/userSchema.js";
 import { getCurrentTime } from "../../utils/utils.js";
 
 
@@ -121,7 +123,7 @@ export const getCompletedSchedules = async (req, res) => {
 };
 
 export const getSchedulesNames = async (req, res) => {
-  // 월별 캘린더 조회
+  // 월별 캘린더 조회 - 일정
   const user_id = req.params.user_id;
   try {
     const schedules = await Schedule.find({ user_id: user_id })
@@ -140,6 +142,49 @@ export const getSchedulesNames = async (req, res) => {
 
   res.send('일정 목록');
 }; 
+
+export const getBirthdays = async (req, res) => {
+  // 월별 캘린더 - 생일 조회
+  const user_id = req.params.user_id;
+  try {
+    const chats = await Chat.find({ user_id: user_id })
+      .select('target_id')
+      .lean();
+    const targetIds = [...new Set(chats.map(c => c?.target_id).filter(Boolean))];
+
+    if (targetIds.length === 0) {
+      return res.status(200).json({ message: '생일을 정상적으로 불러왔습니다.', birthdays: [] });
+    }
+
+    const users = await User.find(
+      { user_id: { $in: targetIds } },
+      { user_id: 1, 'dogProfile.name': 1, 'dogProfile.birthDate': 1 }
+    ).lean();
+
+    const toMMDD = (v) =>
+      !v ? null
+        : /^\d{2}-\d{2}$/.test(v) ? v
+        : /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.slice(5)
+        : (() => { const d = new Date(v); return isNaN(+d) ? null : 
+          `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })();
+    
+    const birthdays = users
+      .map(u => ({ user_id: u.user_id, name: u?.dogProfile?.name || '', date: toMMDD(u?.dogProfile?.birthDate), _id: u?._id }))
+      .filter(b => b.date);
+      
+    res.status(200).json({
+      message: "생일을 정상적으로 불러왔습니다.",
+      birthdays,
+    })
+
+  } catch (error) {
+    console.log("calendarController getBirthdays fetching error")
+    console.error(error)
+    res.status(500).json({
+      message: "생일을 불러오는 동안 오류가 발생했습니다.😅"
+    })
+  }
+};
 
 
 // 일정

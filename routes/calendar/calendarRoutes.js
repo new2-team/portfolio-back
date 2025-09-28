@@ -1,8 +1,15 @@
 // 캘린더 관련 라우터 (ES6 import/export)
  
 import express from 'express';
-import { deleteDiary, deleteSchedules, getComingSchedules, getCompletedSchedules, getDiary, getSchedules, getSchedulesNames, postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules } from '../../controllers/calendar/calendarController.js';
+import {
+  deleteDiary, deleteSchedules,
+  getBirthdays,
+  getComingSchedules,
+  getCompletedSchedules, getDiary, getSchedules, getSchedulesNames,
+  postDiary, postDiaryPictures, postSchedules, putDiary, putSchedules
+} from '../../controllers/calendar/calendarController.js';
 import { upload } from '../../utils/multerConfig.js';
+
 
 const calendarRoutes = express.Router();
 // rootRouter.use("/calender/api", calendarRoutes)
@@ -23,6 +30,10 @@ calendarRoutes.get('/completed-schedules/:user_id', getCompletedSchedules);
 // 월별 캘린더 조회 -> 모든 일정의 일정이름만 모아서 조회
 // http://localhost:8000/calendar/api/month-schedules
 calendarRoutes.get('/month-schedules/:user_id', getSchedulesNames);
+
+// 월별 캘린더 친구 생일 조회 
+// http://localhost:8000/calendar/api/birthdays
+calendarRoutes.get('/birthdays/:user_id', getBirthdays);
 
 
 
