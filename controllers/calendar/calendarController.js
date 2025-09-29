@@ -12,14 +12,26 @@ export const getComingSchedules = async (req, res) => {
     const user_id = req.params.user_id || req.query.user_id;
     const match_id = req.params.match_id || req.query.match_id;
 
-    const filter = { user_id };
-     if (match_id) {
-      filter.$or = [
-        { match_id: String(match_id) },
-      ];
+    if (!user_id) {
+      return res.status(400).json({ message: "user_id가 필요합니다." });
     }
 
-    const schedules = await Schedule.find(filter).lean();
+    let schedules = [];
+
+    if (match_id) {
+      // ✅ 특정 match_id의 일정만 조회
+      schedules = await Schedule.find({ match_id: String(match_id) }).lean();
+    } else {
+      // ✅ 내가 속한 모든 match_id 조회
+      const chats = await Chat.find({
+        $or: [{ user_id }, { target_id: user_id }],
+      }).lean();
+      const matchIds = chats.map((c) => c.match_id);
+
+      schedules = await Schedule.find({
+        $or: [{ user_id }, { match_id: { $in: matchIds } }],
+      }).lean();
+    }
 
     const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
     const now = moment(nowStr, "YYYY-MM-DD HH:mm:ss");
@@ -73,8 +85,16 @@ export const getCompletedSchedules = async (req, res) => {
   }
 
   try {
-    // 1) 해당 유저 전체 일정
-    const schedules = await Schedule.find({ user_id }).lean();
+    // 1) 내가 속한 match_id 전부 조회
+    const chats = await Chat.find({
+      $or: [{ user_id }, { target_id: user_id }],
+    }).lean();
+    const matchIds = chats.map((c) => c.match_id);
+
+    // 2) 내 일정 + 같은 match_id 일정 조회
+    const schedules = await Schedule.find({
+      $or: [{ user_id }, { match_id: { $in: matchIds } }],
+    }).lean();
 
     // 2) 현재 시각
     const nowStr = getCurrentTime(); // "YYYY-MM-DD HH:mm:ss"
@@ -126,9 +146,24 @@ export const getSchedulesNames = async (req, res) => {
   // 월별 캘린더 조회 - 일정
   const user_id = req.params.user_id;
   try {
-    const schedules = await Schedule.find({ user_id: user_id })
+    const chats = await Chat.find({
+      $or: [
+        { user_id: user_id },
+        { target_id: user_id }
+      ]
+    }).lean();
+
+    const matchIds = chats.map(c => c.match_id);
+
+    const schedules = await Schedule.find({
+      $or: [
+        { user_id: user_id },
+        { match_id: { $in: matchIds } }
+      ]
+    }).lean();
+
     res.status(200).json({
-      message: "투두를 정상적으로 불러왔습니다.",
+      message: "일정을 정상적으로 불러왔습니다.",
       schedules,
     })
 
@@ -136,7 +171,7 @@ export const getSchedulesNames = async (req, res) => {
     console.log("todoController foundTodo fetching error")
     console.error(error)
     res.status(500).json({
-      message: "투두를 불러오는 동안 오류가 발생했습니다.😅"
+      message: "일정을 불러오는 동안 오류가 발생했습니다.😅"
     })
   }
 
@@ -229,7 +264,19 @@ export const getSchedules = async (req, res) => {
   const { date } = req.query;
   
   try {
-    const schedules = await Schedule.find({ user_id: user_id, date: date })
+    const chats = await Chat.find({
+      $or: [{ user_id }, { target_id: user_id }]
+    }).lean();
+    const matchIds = chats.map(c => c.match_id);
+
+    const schedules = await Schedule.find({
+      date: date,
+      $or: [
+        { user_id },
+        { match_id: { $in: matchIds } }
+      ]
+    }).lean();
+
     res.status(200).json({
       message: "일정을 정상적으로 불러왔습니다.",
       schedules,
