@@ -6,6 +6,8 @@ import chatRoutes from "./chatting/chatRoutes.js";
 import communityRoutes from "./community/communityRoutes.js";
 import imagesRouter from "./images/imagesRouter.js";
 import userRouter from "./user/userRoutes.js";
+import matchingRoutes from "./matching/matchingRoutes.js";
+import likeRouter from "./like/likeRoutes.js";
 
 const rootRouter = express.Router()
 
@@ -16,5 +18,7 @@ rootRouter.use("/calendar/api", calendarRoutes)
 rootRouter.use("/images", imagesRouter)
 rootRouter.use("/chatting/api", chatRoutes)
 rootRouter.use("/community", communityRoutes)
+rootRouter.use("/matching", matchingRoutes)
+rootRouter.use("/likes", likeRouter)
 
 export default rootRouter;
